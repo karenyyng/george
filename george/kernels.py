@@ -8,9 +8,14 @@ __all__ = [
     "RadialKernel", "ExpKernel", "ExpSquaredKernel",
     "CosineKernel", "ExpSine2Kernel",
     "Matern32Kernel", "Matern52Kernel",
-    # start custom kernels
+    # start custom kernels, not entirely necessary if classes are not private
     "KernelDerivatives",
     "KappaKappaExpSquaredKernel",
+    "KappaGamma1ExpSquaredKernel",
+    "KappaGamma2ExpSquaredKernel",
+    "Gamma1Gamma1ExpSquaredKernel",
+    "Gamma1Gamma2ExpSquaredKernel",
+    "Gamma2Gamma2ExpSquaredKernel",
     "PythonKernel",
 ]
 
@@ -541,7 +546,7 @@ class KappaGamma1ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
         with shape = (n_obs, 2)
 
     .. math::
-        eqn (2) from kern_deriv.pdf
+        eqn (5) from kern_deriv.pdf
     """
     kernel_type = 12
 
@@ -555,7 +560,7 @@ class KappaGamma2ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
         with shape = (n_obs, 2)
 
     .. math::
-        eqn (2) from kern_deriv.pdf
+        eqn (6) from kern_deriv.pdf
     """
     kernel_type = 13
 
@@ -569,7 +574,7 @@ class Gamma1Gamma1ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
         with shape = (n_obs, 2)
 
     .. math::
-        eqn (2) from kern_deriv.pdf
+        eqn (3) from kern_deriv.pdf
     """
     kernel_type = 14
 
@@ -583,7 +588,7 @@ class Gamma1Gamma2ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
         with shape = (n_obs, 2)
 
     .. math::
-        eqn (2) from kern_deriv.pdf
+        eqn (7) from kern_deriv.pdf
     """
     kernel_type = 15
 
@@ -597,6 +602,10 @@ class Gamma2Gamma2ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
         with shape = (n_obs, 2)
 
     .. math::
-        eqn (2) from kern_deriv.pdf
+        eqn (4) from kern_deriv.pdf
     """
     kernel_type = 16
+
+
+# and we should specify the other 3 classes which are transpose of the off
+# diagonal cov

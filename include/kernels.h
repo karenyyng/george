@@ -452,6 +452,8 @@ public:
     double value (const double *x1, const double* x2) const {
         return -99;
     };
+private: 
+    int ix_list = {} 
 }; 
 
 template <typename M>

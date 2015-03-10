@@ -92,12 +92,41 @@ cdef extern from "kernels.h" namespace "george::kernels":
         KernelDerivatives(const unsigned int ndim, const unsigned int dim)
         double value (const double* x1, const double* x2) const
 
-    cdef cppclass KappaKappaExpSquaredKernel[M](KernelDerivatives, ExpSquaredKernel):
+    cdef cppclass KappaKappaExpSquaredKernel[M](KernelDerivatives):
         # to do: figure out how to pass the coordinates to initialize the kernel
-        KappaKappaExpSquaredKernel(const unsigned int ndim, M* metric)
+        KappaKappaExpSquaredKernel(const unsigned int ndim, const double* x1, M* metric)
         # declare a value method that overrides parent class 's value method
         double value (const double* x1, const double* x2) const
 
+    cdef cppclass KappaGamma1ExpSquaredKernel[M](KernelDerivatives):
+        # to do: figure out how to pass the coordinates to initialize the kernel
+        KappaGamma1ExpSquaredKernel(const unsigned int ndim, const double* x1, M* metric)
+        # declare a value method that overrides parent class 's value method
+        double value (const double* x1, const double* x2) const
+
+    cdef cppclass KappaGamma2ExpSquaredKernel[M](KernelDerivatives):
+        # to do: figure out how to pass the coordinates to initialize the kernel
+        KappaGamma2ExpSquaredKernel(const unsigned int ndim, const double* x1, M* metric)
+        # declare a value method that overrides parent class 's value method
+        double value (const double* x1, const double* x2) const
+
+    cdef cppclass Gamma1Gamma1ExpSquaredKernel[M](KernelDerivatives):
+        # to do: figure out how to pass the coordinates to initialize the kernel
+        Gamma1Gamma1ExpSquaredKernel(const unsigned int ndim, const double* x1, M* metric)
+        # declare a value method that overrides parent class 's value method
+        double value (const double* x1, const double* x2) const
+
+    cdef cppclass Gamma1Gamma2ExpSquaredKernel[M](KernelDerivatives):
+        # to do: figure out how to pass the coordinates to initialize the kernel
+        Gamma1Gamma2ExpSquaredKernel(const unsigned int ndim, const double* x1, M* metric)
+        # declare a value method that overrides parent class 's value method
+        double value (const double* x1, const double* x2) const
+
+    cdef cppclass Gamma2Gamma2ExpSquaredKernel[M](KernelDerivatives):
+        # to do: figure out how to pass the coordinates to initialize the kernel
+        Gamma2Gamma2ExpSquaredKernel(const unsigned int ndim, const double* x1, M* metric)
+        # declare a value method that overrides parent class 's value method
+        double value (const double* x1, const double* x2) const
 
 cdef inline double eval_python_kernel (const double* pars,
                                        const unsigned int size, void* meta,
@@ -308,6 +337,61 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
         else:
             raise NotImplementedError("The general metric isn't implemented")
 
+    elif kernel_spec.kernel_type == 14:
+        # the constructor also needs the coordinates
+        if kernel_spec.dim >= 0:
+            kernel = new Gamma1Gamma1ExpSquaredKernel[OneDMetric](ndim,
+                new OneDMetric(ndim, kernel_spec.dim))
+        elif kernel_spec.isotropic:
+            kernel = new Gamma1Gamma1ExpSquaredKernel[IsotropicMetric](ndim,
+                new IsotropicMetric(ndim))
+        elif kernel_spec.axis_aligned:
+            kernel = new Gamma1Gamma1ExpSquaredKernel[AxisAlignedMetric](ndim,
+                new AxisAlignedMetric(ndim))
+        else:
+            raise NotImplementedError("The general metric isn't implemented")
+
+    elif kernel_spec.kernel_type == 14:
+        # the constructor also needs the coordinates
+        if kernel_spec.dim >= 0:
+            kernel = new Gamma1Gamma1ExpSquaredKernel[OneDMetric](ndim,
+                new OneDMetric(ndim, kernel_spec.dim))
+        elif kernel_spec.isotropic:
+            kernel = new Gamma1Gamma1ExpSquaredKernel[IsotropicMetric](ndim,
+                new IsotropicMetric(ndim))
+        elif kernel_spec.axis_aligned:
+            kernel = new Gamma1Gamma1ExpSquaredKernel[AxisAlignedMetric](ndim,
+                new AxisAlignedMetric(ndim))
+        else:
+            raise NotImplementedError("The general metric isn't implemented")
+
+    elif kernel_spec.kernel_type == 15:
+        # the constructor also needs the coordinates
+        if kernel_spec.dim >= 0:
+            kernel = new Gamma1Gamma2ExpSquaredKernel[OneDMetric](ndim,
+                new OneDMetric(ndim, kernel_spec.dim))
+        elif kernel_spec.isotropic:
+            kernel = new Gamma1Gamma2ExpSquaredKernel[IsotropicMetric](ndim,
+                new IsotropicMetric(ndim))
+        elif kernel_spec.axis_aligned:
+            kernel = new Gamma1Gamma2ExpSquaredKernel[AxisAlignedMetric](ndim,
+                new AxisAlignedMetric(ndim))
+        else:
+            raise NotImplementedError("The general metric isn't implemented")
+
+    elif kernel_spec.kernel_type == 16:
+        # the constructor also needs the coordinates
+        if kernel_spec.dim >= 0:
+            kernel = new Gamma2Gamma2ExpSquaredKernel[OneDMetric](ndim,
+                new OneDMetric(ndim, kernel_spec.dim))
+        elif kernel_spec.isotropic:
+            kernel = new Gamma2Gamma2ExpSquaredKernel[IsotropicMetric](ndim,
+                new IsotropicMetric(ndim))
+        elif kernel_spec.axis_aligned:
+            kernel = new Gamma2Gamma2ExpSquaredKernel[AxisAlignedMetric](ndim,
+                new AxisAlignedMetric(ndim))
+        else:
+            raise NotImplementedError("The general metric isn't implemented")
     else:
         raise TypeError("Unknown kernel: {0}".format(
             kernel_spec.__class__.__name__))
