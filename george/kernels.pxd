@@ -31,6 +31,7 @@ cdef extern from "kernels.h" namespace "george::kernels":
         unsigned int size () const
         void set_vector (const double*)
 
+
     cdef cppclass CustomKernel(Kernel):
         CustomKernel(const unsigned int ndim, const unsigned int size,
                      void* meta,
@@ -85,6 +86,17 @@ cdef extern from "kernels.h" namespace "george::kernels":
 
     cdef cppclass ExpSine2Kernel(Kernel):
         ExpSine2Kernel(const unsigned int ndim, const unsigned int dim)
+
+    # Custom Cpp kernels.
+    cdef cppclass KernelDerivatives[M](ExpSquaredKernel):
+        KernelDerivatives(const unsigned int ndim, const unsigned int dim)
+        double value (const double* x1, const double* x2) const
+
+    cdef cppclass KappaKappaExpSquaredKernel[M](KernelDerivatives, ExpSquaredKernel):
+        # to do: figure out how to pass the coordinates to initialize the kernel
+        KappaKappaExpSquaredKernel(const unsigned int ndim, M* metric)
+        # declare a value method that overrides parent class 's value method
+        double value (const double* x1, const double* x2) const
 
 
 cdef inline double eval_python_kernel (const double* pars,
@@ -239,6 +251,62 @@ cdef inline Kernel* parse_kernel(kernel_spec) except *:
 
     elif kernel_spec.kernel_type == 9:
         kernel = new ExpSine2Kernel(ndim, kernel_spec.dim)
+
+    elif kernel_spec.kernel_type == 10:
+        if kernel_spec.dim >= 0:
+            kernel = new ExpSquaredKernel[OneDMetric](ndim,
+                new OneDMetric(ndim, kernel_spec.dim))
+        elif kernel_spec.isotropic:
+            kernel = new ExpSquaredKernel[IsotropicMetric](ndim,
+                new IsotropicMetric(ndim))
+        elif kernel_spec.axis_aligned:
+            kernel = new ExpSquaredKernel[AxisAlignedMetric](ndim,
+                new AxisAlignedMetric(ndim))
+        else:
+            raise NotImplementedError("The general metric isn't implemented")
+        pass
+
+    elif kernel_spec.kernel_type == 11:
+        # the constructor also needs the coordinates
+        if kernel_spec.dim >= 0:
+            kernel = new KappaKappaExpSquaredKernel[OneDMetric](ndim,
+                new OneDMetric(ndim, kernel_spec.dim))
+        elif kernel_spec.isotropic:
+            kernel = new KappaKappaExpSquaredKernel[IsotropicMetric](ndim,
+                new IsotropicMetric(ndim))
+        elif kernel_spec.axis_aligned:
+            kernel = new KappaKappaExpSquaredKernel[AxisAlignedMetric](ndim,
+                new AxisAlignedMetric(ndim))
+        else:
+            raise NotImplementedError("The general metric isn't implemented")
+
+    elif kernel_spec.kernel_type == 12:
+        # the constructor also needs the coordinates
+        if kernel_spec.dim >= 0:
+            kernel = new KappaGamma1ExpSquaredKernel[OneDMetric](ndim,
+                new OneDMetric(ndim, kernel_spec.dim))
+        elif kernel_spec.isotropic:
+            kernel = new KappaGamma1ExpSquaredKernel[IsotropicMetric](ndim,
+                new IsotropicMetric(ndim))
+        elif kernel_spec.axis_aligned:
+            kernel = new KappaGamma1ExpSquaredKernel[AxisAlignedMetric](ndim,
+                new AxisAlignedMetric(ndim))
+        else:
+            raise NotImplementedError("The general metric isn't implemented")
+
+    elif kernel_spec.kernel_type == 13:
+        # the constructor also needs the coordinates
+        if kernel_spec.dim >= 0:
+            kernel = new KappaGamma2ExpSquaredKernel[OneDMetric](ndim,
+                new OneDMetric(ndim, kernel_spec.dim))
+        elif kernel_spec.isotropic:
+            kernel = new KappaGamma2ExpSquaredKernel[IsotropicMetric](ndim,
+                new IsotropicMetric(ndim))
+        elif kernel_spec.axis_aligned:
+            kernel = new KappaGamma2ExpSquaredKernel[AxisAlignedMetric](ndim,
+                new AxisAlignedMetric(ndim))
+        else:
+            raise NotImplementedError("The general metric isn't implemented")
 
     else:
         raise TypeError("Unknown kernel: {0}".format(

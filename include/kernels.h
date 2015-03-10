@@ -360,14 +360,12 @@ public:
     double get_radial_gradient (double r2) const {
         return -0.5 * pow(1 + 0.5 * r2 / alpha_, -alpha_-1);
     };
-
     void gradient (const double* x1, const double* x2, double* grad) const {
         double r2 = this->metric_gradient(x1, x2, &(grad[1])),
                t1 = 1.0 + 0.5 * r2 / alpha_,
                t2 = 2.0 * alpha_ * t1;
         grad[0] = pow(t1, -alpha_) * (r2 / t2 - log(t1));
     };
-
     unsigned int size () const { return this->metric_->size() + 1; };
     void set_parameter (const unsigned int i, const double value) {
         if (i == 0) alpha_ = value;
@@ -381,6 +379,105 @@ public:
 private:
     double alpha_;
 };
+
+template <typename M>
+class KernelDerivatives : public ExpSquaredKernel<M>{
+public: 
+    KernelDerivatives (const long ndim, M* metric)
+        : ExpSquaredKernel<M>(ndim, metric) {}; 
+    double value (const double *x1, const double* x2) const {
+        return  exp(-0.5 * this->get_squared_distance(x1, x2));
+    }
+
+private: 
+    int pairsOfBIndices [4][4];
+    int get_pairs_of_B_indices () const{
+        return -99; 
+    }
+    int get_pairs_of_C_indices () const{
+        return -99;
+    }
+    double termA () const{
+        return -99;
+    }
+};
+
+template <typename M>
+// ideally this class should be added in a different .h file 
+class KappaKappaExpSquaredKernel : public KernelDerivatives<M>{
+public: 
+    // have to figure out if this constructor is correct 
+    // x1 is supposed to be the coordinates 
+    KappaKappaExpSquaredKernel (const long ndim, const double *x1, M* metric)
+      : KernelDerivatives<M>(ndim, metric){}; 
+    double value (const double *x1, const double* x2) const {
+        return -99;
+    }
+}; 
+
+template <typename M>
+// ideally this class should be added in a different .h file 
+class KappaGamma1ExpSquaredKernel : public KernelDerivatives<M>{
+public: 
+    // x1 is supposed to be the coordinates 
+    KappaGamma1ExpSquaredKernel (const long ndim, const double *x1, M* metric)
+      : KernelDerivatives<M>(ndim, metric){}; 
+    double value (const double *x1, const double* x2) const {
+        // needs to compute this  
+        return -99;
+    }
+}; 
+
+template <typename M>
+// ideally this class should be added in a different .h file 
+class KappaGamma1ExpSquaredKernel : public KernelDerivatives<M>{
+public: 
+    // x1 is supposed to be the coordinates 
+    KappaGamma1ExpSquaredKernel (const long ndim, const double *x1, M* metric)
+      : KernelDerivatives<M>(ndim, metric){}; 
+    double value (const double *x1, const double* x2) const {
+        // avoid computation by setting this as zero later on
+        return 0.;
+    }
+}; 
+
+template <typename M>
+// ideally this class should be added in a different .h file 
+class Gamma1Gamma1ExpSquaredKernel : public KernelDerivatives<M>{
+public: 
+    // have to figure out if this constructor is correct 
+    // x1 is supposed to be the coordinates 
+    Gamma1Gamma1ExpSquaredKernel (const long ndim, const double *x1, M* metric)
+      : KernelDerivatives<M>(ndim, metric){}; 
+    double value (const double *x1, const double* x2) const {
+        return -99;
+    };
+}; 
+
+template <typename M>
+class Gamma1Gamma2ExpSquaredKernel : public KernelDerivatives<M>{
+public: 
+    // x1 is supposed to be the coordinates 
+    Gamma1Gamma2ExpSquaredKernel (const long ndim, const double *x1, M* metric)
+      : KernelDerivatives<M>(ndim, metric){}; 
+    double value (const double *x1, const double* x2) const {
+        // put this as zero to avoid computation later on 
+        return 0.;
+    }
+}; 
+
+template <typename M>
+// ideally this class should be added in a different .h file 
+class Gamma2Gamma2ExpSquaredKernel : public KernelDerivatives<M>{
+public: 
+    // have to figure out if this constructor is correct 
+    // x1 is supposed to be the coordinates 
+    Gamma2Gamma2ExpSquaredKernel (const long ndim, const double *x1, M* metric)
+      : KernelDerivatives<M>(ndim, metric){}; 
+    double value (const double *x1, const double* x2) const {
+        return -99;
+    }
+}; 
 
 
 //
