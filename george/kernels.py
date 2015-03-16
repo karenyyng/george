@@ -22,9 +22,9 @@ __all__ = [
 import numpy as np
 from functools import partial
 
-from ._kernels import CythonKernel
+from ._kernels import (CythonKernel, DerivKernel)
 from .utils import numerical_gradient
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 # from custom_kernel import *
 
 
@@ -515,12 +515,12 @@ class PythonKernel(Kernel):
         return grad
 
 
-class KernelDerivatives(ExpSquaredKernel):
-    """
-    this is intended to be a `abstract` / `virtual` class and
-    not to meant to be instantiated directly
-    """
-    kernel_type = 10
+#class KernelDerivatives(ExpSquaredKernel):
+#    """
+#    this is intended to be a `abstract` / `virtual` class and
+#    not to meant to be instantiated directly
+#    """
+#    kernel_type = 10
 
 
 class KappaKappaExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):

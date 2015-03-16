@@ -390,20 +390,46 @@ public:
     }
 
 private: 
-    int pairsOfBIndices [4][4];
+    const int pairsOfBIndices[24] = {0, 1, 2, 3,
+                                     0, 2, 1, 3,
+                                     0, 3, 1, 2,
+                                     2, 3, 0, 1,
+                                     1, 3, 0, 2,
+                                     1, 2, 0, 3}; 
+
     int get_pairs_of_B_indices () const{
-        return -99; 
+        int B_ix[3][8];
+        for (int i=0; i < 6; i++){
+            for (int j=0; j < 4; j++){
+                B_ix[i][j] = pairsOfBIndices[i * 4 + j];
+            }
+        }
+        return B_ix; 
     }
     int get_pairs_of_C_indices () const{
+        int C_ix[3][4];
+        for (int i=0; i < 3; i++){
+            for (int j=0; j < 4; j++){
+                // the C term indices are the same as the first two rows 
+                // of the B term indices 
+                C_ix[i][j] = pairsOfBIndices[i * 4 + j];
+            }
+        }
+        return C_ix;
+    }
+    double termA (const double *x1) const{
         return -99;
     }
-    double termA () const{
+    double termB (const double *x1) const{
+        return -99;
+    }
+    double termC (const double *x1) const{
         return -99;
     }
 };
 
-template <typename M>
 // ideally this class should be added in a different .h file 
+template <typename M>
 class KappaKappaExpSquaredKernel : public KernelDerivatives<M>{
 public: 
     // have to figure out if this constructor is correct 
@@ -416,7 +442,6 @@ public:
 }; 
 
 template <typename M>
-// ideally this class should be added in a different .h file 
 class KappaGamma1ExpSquaredKernel : public KernelDerivatives<M>{
 public: 
     // x1 is supposed to be the coordinates 
@@ -429,7 +454,6 @@ public:
 }; 
 
 template <typename M>
-// ideally this class should be added in a different .h file 
 class KappaGamma1ExpSquaredKernel : public KernelDerivatives<M>{
 public: 
     // x1 is supposed to be the coordinates 
@@ -442,7 +466,6 @@ public:
 }; 
 
 template <typename M>
-// ideally this class should be added in a different .h file 
 class Gamma1Gamma1ExpSquaredKernel : public KernelDerivatives<M>{
 public: 
     // have to figure out if this constructor is correct 
