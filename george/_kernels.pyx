@@ -48,10 +48,11 @@ cdef class DerivKernel:
         self.__pairsOfCIndices__ = \
             np.array([[0, 1, 2, 3], [0, 2, 1, 3], [0, 3, 1, 2]])
 
-    def __X__(self, coords, m, n, spat_ix):
+    def __X__(self, np.ndarray[DTYPE_t, ndim=2] coords, m, n, spat_ix):
         return coords[m, spat_ix] - coords[n, spat_ix]
 
-    def __termA__(self, coords, ix, m, n, debug=False):
+    def __termA__(self, np.ndarray[DTYPE_t, ndim=2] coords, ix, m, n,
+                  debug=False):
         """
         # the constructor also needs the coordinates
         Compute term 1 in equation (24) without leading factors of $\beta^4$
@@ -78,7 +79,8 @@ cdef class DerivKernel:
 
         return term
 
-    def __termB__(self, coords, ix, m, n, metric, debug=False):
+    def __termB__(self, np.ndarray[DTYPE_t, ndim=2] coords,
+                  ix, m, n, metric, debug=False):
         """
         Compute term 2 in equation (24) without leading factors of $\beta^3$
 
@@ -111,7 +113,7 @@ cdef class DerivKernel:
             self.__X__(coords, m, n, ix[1]) * \
             metric[ix[2]]
 
-    def __termC__(self, coords, ix, metric, debug=False):
+    def __termC__(self, np.ndarray[DTYPE_t, ndim=2] coords, ix, metric, debug=False):
         """
         Compute term 3 in equation (24) without leading factor of $\beta^2$
 
@@ -139,7 +141,8 @@ cdef class DerivKernel:
 
         return metric[ix[2]] * metric[ix[0]]
 
-    def __Sigma4thDeriv__(self, corr, coords, ix, m, n, metric, debug=False):
+    def __Sigma4thDeriv__(self, corr, np.ndarray[DTYPE_t, ndim=2] coords,
+                          ix, m, n, metric, debug=False):
         """
         Gather the 10 terms for the 4th derivative of each Sigma
         given the ix for each the derivatives are taken w.r.t.
@@ -186,7 +189,8 @@ cdef class DerivKernel:
                 beta ** 3. * allTermBs +
                 beta ** 2. * allTermCs) / 4.
 
-    def __compute_Sigma4derv_matrix__(self, x, par, ix, metric):
+    def __compute_Sigma4derv_matrix__(self, np.ndarray[DTYPE_t, ndim=2] x,
+                                      pars, ix, metric):
         """
         Compute the coefficients due to the derivatives - this
         should result in a symmetric N x N matrix where N is the
@@ -198,34 +202,38 @@ cdef class DerivKernel:
         :params ix: list or array
             of 4 integers to indicate derivative subscripts
         """
+        # should add a check to make sure that pars is a float not a list
 
-        return np.array([[self.__Sigma4thDeriv__(par, x, ix, m, n, metric,
+        return [[self.__Sigma4thDeriv__(pars, x, ix, m, n, metric,
                                                  debug=False)
-                         for m in range(x.shape[0])]
-                         for n in range(x.shape[0])
-                         ])
+                for m in range(x.shape[0])]
+                for n in range(x.shape[0])
+                ]
 
+    def __dummy__(self, np.ndarray[DTYPE_t, ndim=2] x):
+        return np.array([1, 2, 3])
 
-    #@cython.boundscheck(False)
-    #def value_symmetric(self, np.ndarray[DTYPE_t, ndim=2] x,
-    #                    pars, metric, ix):
-    #    """
-    #    :param x: features
-    #    :param pars: list of floats, pars of the kernel
-    #    :params ix: list or array
-    #        of 4 integers to indicate derivative subscripts
-    #    """
-    #    cdef unsigned int n = x.shape[0], ndim = x.shape[1]
-    #    if self.kernel.get_ndim() != ndim:
-    #        raise ValueError("Dimension mismatch")
+    @cython.boundscheck(False)
+    def value_symmetric(self, np.ndarray[DTYPE_t, ndim=2] x,
+                        pars, metric, ix):
+        """
+        :param x: features
+        :param pars: list of floats, pars of the kernel
+        :params ix: list or array
+            of 4 integers to indicate derivative subscripts
+        """
+        cdef unsigned int n = x.shape[0], ndim = x.shape[1]
+        if self.kernel.get_ndim() != ndim:
+            raise ValueError("Dimension mismatch")
 
-    #    # Build the kernel matrix.
-    #    cdef double value
-    #    cdef unsigned int i, j, delta = x.strides[0]
-    #    cdef np.ndarray[DTYPE_t, ndim=2] k = np.empty((n, n), dtype=DTYPE)
+        # Build the kernel matrix.
+        cdef double value
+        cdef unsigned int i, j, delta = x.strides[0]
+        cdef np.ndarray[DTYPE_t, ndim=2] k = np.empty((n, n), dtype=DTYPE)
 
-    #    cdef np.ndarray[DTYPE_t, ndim=2] LambDa = \
-    #        __compute_Sigma4derv_matrix__(x, par, ix, metric)
+        cdef np.ndarray[DTYPE_t, ndim=2] LambDa = \
+            np.array(self.__compute_Sigma4derv_matrix__(x, pars, ix, metric),
+                     dtype=DTYPE)
 
     #    for i in range(n):
 
