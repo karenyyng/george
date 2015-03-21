@@ -9,20 +9,21 @@ __all__ = [
     "CosineKernel", "ExpSine2Kernel",
     "Matern32Kernel", "Matern52Kernel",
     # start custom kernels, not entirely necessary if classes are not private
-    "KernelDerivatives",
-    "KappaKappaExpSquaredKernel",
-    "KappaGamma1ExpSquaredKernel",
-    "KappaGamma2ExpSquaredKernel",
-    "Gamma1Gamma1ExpSquaredKernel",
-    "Gamma1Gamma2ExpSquaredKernel",
-    "Gamma2Gamma2ExpSquaredKernel",
+    #"KernelDerivatives",
+    #"KappaKappaExpSquaredKernel",
+    #"KappaGamma1ExpSquaredKernel",
+    #"KappaGamma2ExpSquaredKernel",
+    #"Gamma1Gamma1ExpSquaredKernel",
+    #"Gamma1Gamma2ExpSquaredKernel",
+    #"Gamma2Gamma2ExpSquaredKernel",
     "PythonKernel",
 ]
 
 import numpy as np
 from functools import partial
 
-from ._kernels import (CythonKernel, DerivKernel)
+from ._kernels import CythonKernel
+from ._kernels import DerivKernel
 from .utils import numerical_gradient
 # import matplotlib.pyplot as plt
 # from custom_kernel import *
@@ -523,89 +524,89 @@ class PythonKernel(Kernel):
 #    kernel_type = 10
 
 
-class KappaKappaExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
-    """
-    Inherits from the ExpSquaredKernel class and multiplies it with appropriate
-    coefficients
-
-    :params coords: 2D numpy array
-        with shape = (n_obs, 2)
-
-    .. math::
-        eqn (2) from kern_deriv.pdf
-    """
-    kernel_type = 11
-
-
-class KappaGamma1ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
-    """
-    Inherits from the ExpSquaredKernel class and multiplies it with appropriate
-    coefficients
-
-    :params coords: 2D numpy array
-        with shape = (n_obs, 2)
-
-    .. math::
-        eqn (5) from kern_deriv.pdf
-    """
-    kernel_type = 12
-
-
-class KappaGamma2ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
-    """
-    Inherits from the ExpSquaredKernel class and multiplies it with appropriate
-    coefficients
-
-    :params coords: 2D numpy array
-        with shape = (n_obs, 2)
-
-    .. math::
-        eqn (6) from kern_deriv.pdf
-    """
-    kernel_type = 13
-
-
-class Gamma1Gamma1ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
-    """
-    Inherits from the ExpSquaredKernel class and multiplies it with appropriate
-    coefficients
-
-    :params coords: 2D numpy array
-        with shape = (n_obs, 2)
-
-    .. math::
-        eqn (3) from kern_deriv.pdf
-    """
-    kernel_type = 14
-
-
-class Gamma1Gamma2ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
-    """
-    Inherits from the ExpSquaredKernel class and multiplies it with appropriate
-    coefficients
-
-    :params coords: 2D numpy array
-        with shape = (n_obs, 2)
-
-    .. math::
-        eqn (7) from kern_deriv.pdf
-    """
-    kernel_type = 15
-
-
-class Gamma2Gamma2ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
-    """
-    Inherits from the ExpSquaredKernel class and multiplies it with appropriate
-    coefficients
-
-    :params coords: 2D numpy array
-        with shape = (n_obs, 2)
-
-    .. math::
-        eqn (4) from kern_deriv.pdf
-    """
-    kernel_type = 16
-
+# class KappaKappaExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
+#     """
+#     Inherits from the ExpSquaredKernel class and multiplies it with appropriate
+#     coefficients
+#
+#     :params coords: 2D numpy array
+#         with shape = (n_obs, 2)
+#
+#     .. math::
+#         eqn (2) from kern_deriv.pdf
+#     """
+#     kernel_type = 11
+#
+#
+# class KappaGamma1ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
+#     """
+#     Inherits from the ExpSquaredKernel class and multiplies it with appropriate
+#     coefficients
+#
+#     :params coords: 2D numpy array
+#         with shape = (n_obs, 2)
+#
+#     .. math::
+#         eqn (5) from kern_deriv.pdf
+#     """
+#     kernel_type = 12
+#
+#
+# class KappaGamma2ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
+#     """
+#     Inherits from the ExpSquaredKernel class and multiplies it with appropriate
+#     coefficients
+#
+#     :params coords: 2D numpy array
+#         with shape = (n_obs, 2)
+#
+#     .. math::
+#         eqn (6) from kern_deriv.pdf
+#     """
+#     kernel_type = 13
+#
+#
+# class Gamma1Gamma1ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
+#     """
+#     Inherits from the ExpSquaredKernel class and multiplies it with appropriate
+#     coefficients
+#
+#     :params coords: 2D numpy array
+#         with shape = (n_obs, 2)
+#
+#     .. math::
+#         eqn (3) from kern_deriv.pdf
+#     """
+#     kernel_type = 14
+#
+#
+# class Gamma1Gamma2ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
+#     """
+#     Inherits from the ExpSquaredKernel class and multiplies it with appropriate
+#     coefficients
+#
+#     :params coords: 2D numpy array
+#         with shape = (n_obs, 2)
+#
+#     .. math::
+#         eqn (7) from kern_deriv.pdf
+#     """
+#     kernel_type = 15
+#
+#
+# class Gamma2Gamma2ExpSquaredKernel(KernelDerivatives, ExpSquaredKernel):
+#     """
+#     Inherits from the ExpSquaredKernel class and multiplies it with appropriate
+#     coefficients
+#
+#     :params coords: 2D numpy array
+#         with shape = (n_obs, 2)
+#
+#     .. math::
+#         eqn (4) from kern_deriv.pdf
+#     """
+#     kernel_type = 16
+#
 
 # and we should specify the other 3 classes which are transpose of the off
 # diagonal cov

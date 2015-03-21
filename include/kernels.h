@@ -380,7 +380,7 @@ private:
     double alpha_;
 };
 
-template <typename M>
+/* template <typename M>
 class KernelDerivatives : public ExpSquaredKernel<M>{
 public: 
     KernelDerivatives (const long ndim, M* metric)
@@ -427,9 +427,10 @@ private:
         return -99;
     }
 };
+*/
 
 // ideally this class should be added in a different .h file 
-template <typename M>
+/*   template <typename M>
 class KappaKappaExpSquaredKernel : public KernelDerivatives<M>{
 public: 
     // have to figure out if this constructor is correct 
@@ -503,7 +504,7 @@ public:
         return -99;
     }
 }; 
-
+*/
 
 //
 // PERIODIC KERNELS
@@ -564,6 +565,7 @@ private:
     unsigned int dim_;
     double gamma_, period_;
 };
+
 
 }; // namespace kernels
 }; // namespace george
