@@ -19,10 +19,10 @@ def _rebuild(kernel_spec):
     return CythonKernel(kernel_spec)
 
 def _rebuild_kernderiv(kernel_spec):
-    return DerivKernel(kernel_spec)
+    return CythonDerivKernel(kernel_spec)
 
 
-cdef class DerivKernel:
+cdef class CythonDerivKernel:
     """new class to contain all commonly used derivative features
 
     :note:
@@ -210,9 +210,6 @@ cdef class DerivKernel:
                 for n in range(x.shape[0])
                 ]
 
-    def __dummy__(self, np.ndarray[DTYPE_t, ndim=2] x):
-        return np.array([1, 2, 3])
-
     @cython.boundscheck(False)
     def value_symmetric(self, np.ndarray[DTYPE_t, ndim=2] x,
                         pars, metric, ix):
@@ -235,22 +232,51 @@ cdef class DerivKernel:
             np.array(self.__compute_Sigma4derv_matrix__(x, pars, ix, metric),
                      dtype=DTYPE)
 
-    #    for i in range(n):
+        for i in range(n):
+            # Compute diagonal values.
+            # x.data gives the pointers to the numpy array values.
+            k[i, i] = self.kernel.value(<double*>(x.data + i*delta),
+                                        <double*>(x.data + i*delta)) * \
+                LambDa[i, i]
 
-    #        # Compute diagonal values.
-    #        # x.data gives the pointers to the numpy array values.
-    #        k[i, i] = self.kernel.value(<double*>(x.data + i*delta),
-    #                                    <double*>(x.data + i*delta)) * \
-    #            LambDa[i, i]
+            for j in range(i + 1, n):
+                # Off diagonal values assuming symmetric matrix.
+                value = self.kernel.value(<double*>(x.data + i*delta),
+                                          <double*>(x.data + j*delta))
+                k[i, j] = value * LambDa[i, j]
+                k[j, i] = value * LambDa[j, i]
 
-    #        for j in range(i + 1, n):
-    #            # Off diagonal values assuming symmetric matrix.
-    #            value = self.kernel.value(<double*>(x.data + i*delta),
-    #                                      <double*>(x.data + j*delta))
-    #            k[i, j] = value * lambDa[i, j]
-    #            k[j, i] = value * lambDa[j, i]
+        return k
 
-    #    return k
+    @cython.boundscheck(False)
+    # have to think about what to do with the gradient function
+    # this should also be modified
+    def gradient_symmetric(self, np.ndarray[DTYPE_t, ndim=2] x):
+        # Check the input dimensions.
+        cdef unsigned int n = x.shape[0], ndim = x.shape[1]
+        if self.kernel.get_ndim() != ndim:
+            raise ValueError("Dimension mismatch")
+
+        # Get the number of parameters.
+        cdef unsigned int size = self.kernel.size()
+
+        # Build the gradient matrix.
+        cdef double value
+        cdef np.ndarray[DTYPE_t, ndim=3] g = np.empty((n, n, size), dtype=DTYPE)
+        cdef unsigned int i, j, k, delta = x.strides[0]
+        cdef unsigned int dx = g.strides[0], dy = g.strides[1]
+        for i in range(n):
+            self.kernel.gradient(<double*>(x.data + i*delta),
+                                 <double*>(x.data + i*delta),
+                                 <double*>(g.data + i*dx + i*dy))
+            for j in range(i + 1, n):
+                self.kernel.gradient(<double*>(x.data + i*delta),
+                                     <double*>(x.data + j*delta),
+                                     <double*>(g.data + i*dx + j*dy))
+                for k in range(size):
+                    g[j, i, k] = g[i, j, k]
+
+        return g
 
 cdef class CythonKernel:
 

@@ -380,131 +380,56 @@ private:
     double alpha_;
 };
 
-/* template <typename M>
-class KernelDerivatives : public ExpSquaredKernel<M>{
-public: 
-    KernelDerivatives (const long ndim, M* metric)
-        : ExpSquaredKernel<M>(ndim, metric) {}; 
-    double value (const double *x1, const double* x2) const {
-        return  exp(-0.5 * this->get_squared_distance(x1, x2));
-    }
-
-private: 
-    const int pairsOfBIndices[24] = {0, 1, 2, 3,
-                                     0, 2, 1, 3,
-                                     0, 3, 1, 2,
-                                     2, 3, 0, 1,
-                                     1, 3, 0, 2,
-                                     1, 2, 0, 3}; 
-
-    int get_pairs_of_B_indices () const{
-        int B_ix[3][8];
-        for (int i=0; i < 6; i++){
-            for (int j=0; j < 4; j++){
-                B_ix[i][j] = pairsOfBIndices[i * 4 + j];
-            }
-        }
-        return B_ix; 
-    }
-    int get_pairs_of_C_indices () const{
-        int C_ix[3][4];
-        for (int i=0; i < 3; i++){
-            for (int j=0; j < 4; j++){
-                // the C term indices are the same as the first two rows 
-                // of the B term indices 
-                C_ix[i][j] = pairsOfBIndices[i * 4 + j];
-            }
-        }
-        return C_ix;
-    }
-    double termA (const double *x1) const{
-        return -99;
-    }
-    double termB (const double *x1) const{
-        return -99;
-    }
-    double termC (const double *x1) const{
-        return -99;
-    }
-};
-*/
-
 // ideally this class should be added in a different .h file 
-/*   template <typename M>
-class KappaKappaExpSquaredKernel : public KernelDerivatives<M>{
+template <typename M>
+class KappaKappaExpSquaredKernel : public ExpSquaredKernel<M>{
 public: 
     // have to figure out if this constructor is correct 
     // x1 is supposed to be the coordinates 
-    KappaKappaExpSquaredKernel (const long ndim, const double *x1, M* metric)
-      : KernelDerivatives<M>(ndim, metric){}; 
-    double value (const double *x1, const double* x2) const {
-        return -99;
-    }
+    KappaKappaExpSquaredKernel (const long ndim, M* metric)
+      : ExpSquaredKernel<M>(ndim, metric){}; 
 }; 
 
 template <typename M>
-class KappaGamma1ExpSquaredKernel : public KernelDerivatives<M>{
+class KappaGamma1ExpSquaredKernel : public ExpSquaredKernel<M>{
 public: 
-    // x1 is supposed to be the coordinates 
-    KappaGamma1ExpSquaredKernel (const long ndim, const double *x1, M* metric)
-      : KernelDerivatives<M>(ndim, metric){}; 
-    double value (const double *x1, const double* x2) const {
-        // needs to compute this  
-        return -99;
-    }
+    KappaGamma1ExpSquaredKernel (const long ndim, M* metric)
+      : ExpSquaredKernel<M>(ndim, metric){}; 
 }; 
 
 template <typename M>
-class KappaGamma1ExpSquaredKernel : public KernelDerivatives<M>{
+class KappaGamma2ExpSquaredKernel : public ExpSquaredKernel<M>{
 public: 
-    // x1 is supposed to be the coordinates 
-    KappaGamma1ExpSquaredKernel (const long ndim, const double *x1, M* metric)
-      : KernelDerivatives<M>(ndim, metric){}; 
-    double value (const double *x1, const double* x2) const {
-        // avoid computation by setting this as zero later on
-        return 0.;
-    }
+    KappaGamma2ExpSquaredKernel (const long ndim, M* metric)
+      : ExpSquaredKernel<M>(ndim, metric){}; 
 }; 
 
 template <typename M>
-class Gamma1Gamma1ExpSquaredKernel : public KernelDerivatives<M>{
+class Gamma1Gamma1ExpSquaredKernel : public ExpSquaredKernel<M>{
 public: 
     // have to figure out if this constructor is correct 
     // x1 is supposed to be the coordinates 
-    Gamma1Gamma1ExpSquaredKernel (const long ndim, const double *x1, M* metric)
-      : KernelDerivatives<M>(ndim, metric){}; 
-    double value (const double *x1, const double* x2) const {
-        return -99;
-    };
-private: 
-    int ix_list = {} 
+    Gamma1Gamma1ExpSquaredKernel (const long ndim, M* metric)
+      : ExpSquaredKernel<M>(ndim, metric){}; 
 }; 
 
 template <typename M>
-class Gamma1Gamma2ExpSquaredKernel : public KernelDerivatives<M>{
+class Gamma1Gamma2ExpSquaredKernel : public ExpSquaredKernel<M>{
 public: 
     // x1 is supposed to be the coordinates 
-    Gamma1Gamma2ExpSquaredKernel (const long ndim, const double *x1, M* metric)
-      : KernelDerivatives<M>(ndim, metric){}; 
-    double value (const double *x1, const double* x2) const {
-        // put this as zero to avoid computation later on 
-        return 0.;
-    }
+    Gamma1Gamma2ExpSquaredKernel (const long ndim, M* metric)
+      : ExpSquaredKernel<M>(ndim, metric){}; 
 }; 
 
 template <typename M>
 // ideally this class should be added in a different .h file 
-class Gamma2Gamma2ExpSquaredKernel : public KernelDerivatives<M>{
+class Gamma2Gamma2ExpSquaredKernel : public ExpSquaredKernel<M>{
 public: 
     // have to figure out if this constructor is correct 
     // x1 is supposed to be the coordinates 
-    Gamma2Gamma2ExpSquaredKernel (const long ndim, const double *x1, M* metric)
-      : KernelDerivatives<M>(ndim, metric){}; 
-    double value (const double *x1, const double* x2) const {
-        return -99;
-    }
+    Gamma2Gamma2ExpSquaredKernel (const long ndim, M* metric)
+      : ExpSquaredKernel<M>(ndim, metric){}; 
 }; 
-*/
 
 //
 // PERIODIC KERNELS
