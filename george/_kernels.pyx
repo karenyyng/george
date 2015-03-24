@@ -8,6 +8,7 @@ import numpy as np
 cimport numpy as np
 np.import_array()
 
+from libcpp cimport bool as bool_t
 
 DTYPE = np.float64
 ctypedef np.float64_t DTYPE_t
@@ -19,10 +20,11 @@ def _rebuild(kernel_spec):
     return CythonKernel(kernel_spec)
 
 def _rebuild_kernderiv(kernel_spec):
+    # I am not quite sure what this does
     return CythonDerivKernel(kernel_spec)
 
 
-cdef class CythonDerivKernel:
+cdef class CythonDerivKernel(CythonKernel):
     """new class to contain all commonly used derivative features
 
     :note:
@@ -32,20 +34,15 @@ cdef class CythonDerivKernel:
     See first answer at
     http://stackoverflow.com/questions/10298371/cython-and-c-inheritance
     """
-    # declare same stuff as Cython Kernel
-    cdef kernels.Kernel* kernel
-    cdef object kernel_spec
-
-
     @cython.boundscheck(False)
     def __cinit__(self, np.ndarray[DTYPE_t, ndim=1] metric,
                   unsigned int ndim = 2, unsigned int dim=-1):
 
-        cdef np.ndarray[DTYPE_int_t, ndim=2] self.__pairsOfBIndices__ = \
+        cdef np.ndarray[DTYPE_int_t, ndim=2] __pairsOfBIndices__ = \
             np.array([[0, 1, 2, 3], [0, 2, 1, 3], [0, 3, 1, 2],
                      [2, 3, 0, 1], [1, 3, 0, 2], [1, 2, 0, 3]])
 
-        cdef np.ndarray[DTYPE_int_t, ndim=2] self.__pairsOfCIndices__ = \
+        cdef np.ndarray[DTYPE_int_t, ndim=2] __pairsOfCIndices__ = \
             np.array([[0, 1, 2, 3], [0, 2, 1, 3], [0, 3, 1, 2]])
 
     def __X__(self, np.ndarray[DTYPE_t, ndim=2] coords,
@@ -55,7 +52,7 @@ cdef class CythonDerivKernel:
     def __termA__(self, np.ndarray[DTYPE_t, ndim=2] coords,
                   np.ndarray[DTYPE_int_t, ndim=1] ix,
                   unsigned int m, unsigned int n,
-                  bool debug=False):
+                  bool_t debug=False):
         """
         # the constructor also needs the coordinates
         Compute term 1 in equation (24) without leading factors of $\beta^4$
@@ -73,7 +70,7 @@ cdef class CythonDerivKernel:
             X_i X_j X_h X_k
         """
         cdef double term = 1
-        if debug:
+
         for i in ix:
             term *= self.__X__(coords, m, n, i)
 
@@ -118,7 +115,7 @@ cdef class CythonDerivKernel:
     def __termC__(self, np.ndarray[DTYPE_t, ndim=2] coords,
                   np.ndarray[DTYPE_int_t, ndim=1] ix,
                   np.ndarray[DTYPE_t, ndim=1] metric,
-                  bool debug=False):
+                  bool_t debug=False):
         """
         Compute term 3 in equation (24) without leading factor of $\beta^2$
 
@@ -145,12 +142,12 @@ cdef class CythonDerivKernel:
 
         return metric[ix[2]] * metric[ix[0]]
 
-    def __Sigma4thDeriv__(self, double corr,
+    def __Sigma4thDeriv__(self, double beta,
                           np.ndarray[DTYPE_t, ndim=2] coords,
                           np.ndarray[DTYPE_int_t, ndim=1] ix,
                           unsigned int m, unsigned int n,
                           np.ndarray[DTYPE_t, ndim=1] metric,
-                          bool debug=False):
+                          bool_t debug=False):
         """
         Gather the 10 terms for the 4th derivative of each Sigma
         given the ix for each the derivatives are taken w.r.t.
@@ -163,14 +160,6 @@ cdef class CythonDerivKernel:
 
         :params ix: list of 4 integers
         """
-
-        if isinstance(corr, np.ndarray) and len(corr) == 1:
-            beta = corr[0]
-        elif len(corr) == 2:
-            beta = corr[1]
-        else:
-            raise ValueError("pars of {0} has unexcepted shape".format(corr))
-
         allTermBs = 0
         combBix = \
             [[ix[i] for i in self.__pairsOfBIndices__[j]] for j in range(6)]
@@ -219,7 +208,7 @@ cdef class CythonDerivKernel:
                 ]
 
     @cython.boundscheck(False)
-    def kernel_deriv_coeff(self, np.ndarray[DTYPE_t, ndim=2] x,
+    def kernel_deriv_coeff(self, np.ndarray[DTYPE_t, ndim=2] x1,
                            np.ndarray[DTYPE_int_t, ndim=2] ix_list,
                            double pars,
                            np.ndarray[DTYPE_int_t, ndim=1] terms_signs,
@@ -234,7 +223,7 @@ cdef class CythonDerivKernel:
         :param pars:
         :param terms_signs:
         """
-        cdef np.npdarray[DTYPE_t, ndim=2] mat = \
+        cdef np.ndarray[DTYPE_t, ndim=2] mat = \
             np.zeros((x1.shape[0], x1.shape[0]))
 
         for i in range(len(ix_list)):
@@ -268,7 +257,7 @@ cdef class CythonDerivKernel:
         cdef np.ndarray[DTYPE_t, ndim=2] k = np.empty((n, n), dtype=DTYPE)
 
         cdef np.ndarray[DTYPE_t, ndim=2] LambDa = \
-            kernel_deriv_coeff(x, ix_list, pars, terms_signs, metric)
+            self.kernel_deriv_coeff(x, ix_list, pars, terms_signs, metric)
 
         for i in range(n):
             # Compute diagonal values.
