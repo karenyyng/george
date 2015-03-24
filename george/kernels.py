@@ -527,12 +527,31 @@ class KappaKappaExpSquaredKernel(ExpSquaredKernel):
     """
     kernel_type = 10
 
+    def __init__(self):
+        # python arrays are zeroth indexed
+        self.__ix_list__ = np.array([[1, 1, 1, 1],
+                                     [1, 1, 2, 2],
+                                     [2, 2, 1, 1],
+                                     [2, 2, 2, 2]]) - 1
+
+        self.__terms_signs__ = [1, 1, 1, 1]
+
     @property
     def kernel(self):
         if self.dirty or self._kernel is None:
+            # this is where the Cython code is called
             self._kernel = CythonDerivKernel(self)
             self.dirty = False
         return self._kernel
+
+    def value(self, x1, x2=None):
+        x1 = np.ascontiguousarray(x1, dtype=np.float64)
+        if x2 is None:
+            return self.kernel.value_symmetric(x1, self.pars[-1], )
+        else:
+            raise NotImplementedError(
+                "Non symmetric DerivKernel not implemented")
+
 
 class KappaGamma1ExpSquaredKernel(ExpSquaredKernel):
     """
@@ -553,6 +572,7 @@ class KappaGamma1ExpSquaredKernel(ExpSquaredKernel):
             self._kernel = CythonDerivKernel(self)
             self.dirty = False
         return self._kernel
+
 
 class KappaGamma2ExpSquaredKernel(ExpSquaredKernel):
     """
@@ -615,6 +635,7 @@ class Gamma1Gamma2ExpSquaredKernel(ExpSquaredKernel):
             self._kernel = CythonDerivKernel(self)
             self.dirty = False
         return self._kernel
+
 
 class Gamma2Gamma2ExpSquaredKernel(ExpSquaredKernel):
     """
