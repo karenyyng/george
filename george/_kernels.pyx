@@ -34,16 +34,19 @@ cdef class CythonDerivKernel(CythonKernel):
     See first answer at
     http://stackoverflow.com/questions/10298371/cython-and-c-inheritance
     """
+    cdef np.ndarray __pairsOfBIndices__
+    cdef np.ndarray __pairsOfCIndices__
+
     @cython.boundscheck(False)
-    def __cinit__(self, np.ndarray[DTYPE_t, ndim=1] metric,
-                  unsigned int ndim = 2, unsigned int dim=-1):
-
-        cdef np.ndarray[DTYPE_int_t, ndim=2] __pairsOfBIndices__ = \
+    def __cinit__(self):
+        self.__pairsOfBIndices__ = \
             np.array([[0, 1, 2, 3], [0, 2, 1, 3], [0, 3, 1, 2],
-                     [2, 3, 0, 1], [1, 3, 0, 2], [1, 2, 0, 3]])
+                     [2, 3, 0, 1], [1, 3, 0, 2], [1, 2, 0, 3]],
+                     dtype=DTYPE_int)
 
-        cdef np.ndarray[DTYPE_int_t, ndim=2] __pairsOfCIndices__ = \
-            np.array([[0, 1, 2, 3], [0, 2, 1, 3], [0, 3, 1, 2]])
+        self.__pairsOfCIndices__ = \
+            np.array([[0, 1, 2, 3], [0, 2, 1, 3], [0, 3, 1, 2]],
+                     dtype=DTYPE_int)
 
     def __X__(self, np.ndarray[DTYPE_t, ndim=2] coords,
               unsigned int m, unsigned int n, unsigned int spat_ix):
@@ -162,7 +165,8 @@ cdef class CythonDerivKernel(CythonKernel):
         """
         allTermBs = 0
         combBix = \
-            [[ix[i] for i in self.__pairsOfBIndices__[j]] for j in range(6)]
+            np.array([[ix[i] for i in self.__pairsOfBIndices__[j]]
+                      for j in range(6)])
 
         # combBix is the subscript indices combination for B terms
         for i in range(6):
@@ -170,7 +174,8 @@ cdef class CythonDerivKernel(CythonKernel):
 
         allTermCs = 0
         combCix = \
-            [[ix[i] for i in self.__pairsOfCIndices__[j]] for j in range(3)]
+            np.array([[ix[i] for i in self.__pairsOfCIndices__[j]]
+                      for j in range(3)])
 
         for i in range(3):
             allTermCs += self.__termC__(coords, combCix[i], metric)
@@ -232,8 +237,6 @@ cdef class CythonDerivKernel(CythonKernel):
                                                    metric)
 
         return mat
-
-
 
     @cython.boundscheck(False)
     def value_symmetric(self, np.ndarray[DTYPE_t, ndim=2] x,

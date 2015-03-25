@@ -527,14 +527,16 @@ class KappaKappaExpSquaredKernel(ExpSquaredKernel):
     """
     kernel_type = 10
 
-    def __init__(self):
+    def __init__(self, *pars, **kwargs):
+        super(ExpSquaredKernel, self).__init__(*pars, **kwargs)
+
         # python arrays are zeroth indexed
         self.__ix_list__ = np.array([[1, 1, 1, 1],
                                      [1, 1, 2, 2],
                                      [2, 2, 1, 1],
                                      [2, 2, 2, 2]]) - 1
 
-        self.__terms_signs__ = [1, 1, 1, 1]
+        self.__terms_signs__ = np.array([1, 1, 1, 1])
 
     @property
     def kernel(self):
@@ -547,7 +549,11 @@ class KappaKappaExpSquaredKernel(ExpSquaredKernel):
     def value(self, x1, x2=None):
         x1 = np.ascontiguousarray(x1, dtype=np.float64)
         if x2 is None:
-            return self.kernel.value_symmetric(x1, self.pars[-1], )
+            return self.kernel.value_symmetric(x1, self.__ix_list__,
+                                               self.pars[-1],
+                                               self.__terms_signs__,
+                                               np.ones(x1.ndim)
+                                               )
         else:
             raise NotImplementedError(
                 "Non symmetric DerivKernel not implemented")
