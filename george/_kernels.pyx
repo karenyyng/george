@@ -187,7 +187,7 @@ cdef class CythonDerivKernel(CythonKernel):
             print "combCix is ", combCix
             print "terms are {0}, {1}, {2}".format(termA, allTermBs, allTermCs)
 
-        return (beta ** 4. * termA +
+        return (beta ** 4. * termA -
                 beta ** 3. * allTermBs +
                 beta ** 2. * allTermCs) / 4.
 
