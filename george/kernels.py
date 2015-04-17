@@ -549,6 +549,8 @@ class KappaKappaExpSquaredKernel(ExpSquaredKernel):
     def value(self, x1, x2=None):
         x1 = np.ascontiguousarray(x1, dtype=np.float64)
         if x2 is None:
+            # we need to pass the values in since the Cython code
+            # may not be able to parse Python values from self
             return self.kernel.value_symmetric(x1, self.__ix_list__,
                                                self.pars[-1],
                                                self.__terms_signs__,

@@ -55,7 +55,7 @@ cdef class CythonDerivKernel(CythonKernel):
     def __termA__(self, np.ndarray[DTYPE_t, ndim=2] coords,
                   np.ndarray[DTYPE_int_t, ndim=1] ix,
                   unsigned int m, unsigned int n,
-                  bool_t debug=False):
+                  bool_t debug=True):
         """
         # the constructor also needs the coordinates
         Compute term 1 in equation (24) without leading factors of $\beta^4$
@@ -82,7 +82,7 @@ cdef class CythonDerivKernel(CythonKernel):
     def __termB__(self, np.ndarray[DTYPE_t, ndim=2] coords,
                   np.ndarray[DTYPE_int_t, ndim=1] ix,
                   unsigned int m, unsigned int n,
-                  np.ndarray[DTYPE_t, ndim=1] metric, debug=False):
+                  np.ndarray[DTYPE_t, ndim=1] metric, debug=True):
         """
         Compute term 2 in equation (24) without leading factors of $\beta^3$
 
@@ -118,7 +118,7 @@ cdef class CythonDerivKernel(CythonKernel):
     def __termC__(self, np.ndarray[DTYPE_t, ndim=2] coords,
                   np.ndarray[DTYPE_int_t, ndim=1] ix,
                   np.ndarray[DTYPE_t, ndim=1] metric,
-                  bool_t debug=False):
+                  bool_t debug=True):
         """
         Compute term 3 in equation (24) without leading factor of $\beta^2$
 
@@ -150,7 +150,7 @@ cdef class CythonDerivKernel(CythonKernel):
                           np.ndarray[DTYPE_int_t, ndim=1] ix,
                           unsigned int m, unsigned int n,
                           np.ndarray[DTYPE_t, ndim=1] metric,
-                          bool_t debug=False):
+                          bool_t debug=True):
         """
         Gather the 10 terms for the 4th derivative of each Sigma
         given the ix for each the derivatives are taken w.r.t.
@@ -207,7 +207,7 @@ cdef class CythonDerivKernel(CythonKernel):
         # should add a check to make sure that pars is a float not a list
 
         return [[self.__Sigma4thDeriv__(pars, x, ix, m, n, metric,
-                                        debug=False)
+                                        debug=True)
                 for m in range(x.shape[0])]
                 for n in range(x.shape[0])
                 ]
@@ -272,9 +272,10 @@ cdef class CythonDerivKernel(CythonKernel):
             for j in range(i + 1, n):
                 # Off diagonal values assuming symmetric matrix.
                 value = self.kernel.value(<double*>(x.data + i*delta),
-                                          <double*>(x.data + j*delta))
-                k[i, j] = value * LambDa[i, j]
-                k[j, i] = value * LambDa[j, i]
+                                          <double*>(x.data + j*delta)) * \
+                    LambDa[i, j]
+                k[i, j] = value
+                k[j, i] = value
 
         return k
 
