@@ -562,6 +562,11 @@ class KappaKappaExpSquaredKernel(ExpSquaredKernel):
                                          self.__terms_signs__,
                                          np.ones(x1.ndim))
 
+    def __mul__(self, b):
+        if not hasattr(b, "is_kernel"):
+            return Product(ConstantKernel(float(b), ndim=self.ndim), self)
+        return Product(self, b)
+
 
 class KappaGamma1ExpSquaredKernel(ExpSquaredKernel):
     """

@@ -10,6 +10,7 @@ using std::vector;
 namespace george {
 namespace kernels {
 
+typedef vector< vector<int> > vecInt2D;
 
 class Kernel {
 public:
@@ -380,18 +381,41 @@ private:
     double alpha_;
 };
 
+
 // ideally this class should be added in a different .h file 
 template <typename M>
-class KappaKappaExpSquaredKernel : public ExpSquaredKernel<M>{
+class DerivativeExpSquaredKernel: public ExpSquaredKernel<M>{
 public: 
     // have to figure out if this constructor is correct 
     // x1 is supposed to be the coordinates 
-    KappaKappaExpSquaredKernel (const long ndim, M* metric)
+    DerivativeExpSquaredKernel (const long ndim, M* metric)
       : ExpSquaredKernel<M>(ndim, metric){
-      
-      
+       
       }; 
-}; 
+
+    virtual double value (const double* x1, const double* x2) const {
+        // should combine indices for this 
+        return 0.0;
+    };
+
+};
+
+template <typename M>
+class KappaKappaExpSquaredKernel: public ExpSquaredKernel<M>{
+public: 
+    KappaKappaExpSquaredKernel (const long ndim, M* metric)
+      : ExpSquaredKernel<M>(ndim, metric){}; 
+    
+    double lambda(const double* x1, const double* x2){
+    }; 
+
+    double value (const double* x1, const double* x2) const {
+        return exp(-0.5 * this->get_squared_distance(x1, x2)) * this->lambda(x1, x2);
+    };
+
+    double* B_ixes();
+
+};
 
 template <typename M>
 class KappaGamma1ExpSquaredKernel : public ExpSquaredKernel<M>{

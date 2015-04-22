@@ -87,7 +87,10 @@ cdef extern from "kernels.h" namespace "george::kernels":
     cdef cppclass ExpSine2Kernel(Kernel):
         ExpSine2Kernel(const unsigned int ndim, const unsigned int dim)
 
-    # Custom Cpp kernels.
+    # Custom Cpp kernels for derivatives.
+    cdef cppclass DerivativeExpSquaredKernel[M](ExpSquaredKernel):
+        KappaKappaExpSquaredKernel(const unsigned int ndim, M* metric)
+
     cdef cppclass KappaKappaExpSquaredKernel[M](ExpSquaredKernel):
         KappaKappaExpSquaredKernel(const unsigned int ndim, M* metric)
 
