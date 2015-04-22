@@ -25,7 +25,7 @@
 
 using std::vector;  // avoid having to write std:: all the time
 
-int** get_termB_ixes(){
+vector< vector<int> > get_termB_ixes(){
     unsigned int r, c;
     const int rows = 6, cols = 4;
     int arr[rows][cols] = {{0, 1, 2, 3}, 
@@ -35,45 +35,29 @@ int** get_termB_ixes(){
                            {1, 3, 0, 2},
                            {1, 2, 0, 3}};
 
-    int** ix;
-    ix = new int* [rows];
 
-    for (r = 0; r < rows; r++){
-        ix[r] = new int [cols];
-        for(c = 0; c < cols; c++){
-            ix[r][c] = arr[r][c];
-            std::cout << ix[r][c] << " "; 
-        }
+    typedef vector<vector<int> > vec2D;
+    vec2D v2d;
+
+    vector<int> rowvector;
+
+    for (r = 0; r < rows; r++) {
+        rowvector.clear();
+        for (c = 0; c < cols; c++ ) {
+            rowvector.push_back(arr[r][c]);
+            std::cout << arr[r][c];
+        } 
         std::cout << std::endl;
+        v2d.push_back(rowvector);
     }
-    return ix;
+
+    return v2d;
 }
 
-void del_termB_ixes(int** ix){ 
-    unsigned int r;
-    const int rows = 6;
-
-    for (r=0; r < rows; r++){
-        delete [] ix[r];
-    }
-    delete [] ix;
-}
 
 int main(){
-    int** ptr = get_termB_ixes();
-
-    for (r = 0; r < rows; r++){
-        ix[r] = new int [cols];
-        for(c = 0; c < cols; c++){
-            ix[r][c] = arr[r][c];
-            std::cout << ix[r][c] << " "; 
-        }
-        std::cout << std::endl;
-    }
-    
-
-    del_termB_ixes(ptr);
-    ptr = NULL;
-    
+    const vector< vector<int> > B_ix  = get_termB_ixes();
+    std::cout << B_ix.size() << std::endl; 
+    std::cout << B_ix[0].size() << std::endl; 
     return 0;
 }

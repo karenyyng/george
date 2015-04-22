@@ -4,13 +4,12 @@
 #include <cmath>
 #include <cfloat>
 #include <vector>
+#include <iostream>
 
 using std::vector;
 
 namespace george {
 namespace kernels {
-
-typedef vector< vector<int> > vecInt2D;
 
 class Kernel {
 public:
@@ -398,7 +397,63 @@ public:
         return 0.0;
     };
 
+protected:
+    vector< vector<int> > get_termB_ixes(){
+        unsigned int r, c;
+        const int rows = 6, cols = 4;
+        int arr[rows][cols] = {{0, 1, 2, 3}, 
+                               {0, 2, 1, 3},
+                               {0, 3, 1, 2},
+                               {2, 3, 0, 1},
+                               {1, 3, 0, 2},
+                               {1, 2, 0, 3}};
+
+
+        typedef vector<vector<int> > vec2D;
+        vec2D v2d;
+
+        vector<int> rowvector;
+
+        for (r = 0; r < rows; r++) {
+            rowvector.clear();
+            for (c = 0; c < cols; c++ ) {
+                rowvector.push_back(arr[r][c]);
+                std::cout << arr[r][c];
+            } 
+            std::cout << std::endl;
+            v2d.push_back(rowvector);
+        }
+
+        return v2d;
+    }
+
+    vector< vector<int> > get_termC_ixes(){
+        unsigned int r, c;
+        const int rows = 3, cols = 4;
+        int arr[rows][cols] = {{0, 1, 2, 3}, 
+                               {0, 2, 1, 3},
+                               {0, 3, 1, 2}};
+
+
+        typedef vector<vector<int> > vec2D;
+        vec2D v2d;
+
+        vector<int> rowvector;
+
+        for (r = 0; r < rows; r++) {
+            rowvector.clear();
+            for (c = 0; c < cols; c++ ) {
+                rowvector.push_back(arr[r][c]);
+                std::cout << arr[r][c];
+            } 
+            std::cout << std::endl;
+            v2d.push_back(rowvector);
+        }
+
+        return v2d;
+    }
 };
+
 
 template <typename M>
 class KappaKappaExpSquaredKernel: public ExpSquaredKernel<M>{
@@ -410,7 +465,7 @@ public:
     }; 
 
     double value (const double* x1, const double* x2) const {
-        return exp(-0.5 * this->get_squared_distance(x1, x2)) * this->lambda(x1, x2);
+        return exp(-0.5 * this->get_squared_distance(x1, x2)); // * this -> lambda(x1, x2);
     };
 
     double* B_ixes();
