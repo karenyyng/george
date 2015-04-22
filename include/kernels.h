@@ -387,7 +387,10 @@ public:
     // have to figure out if this constructor is correct 
     // x1 is supposed to be the coordinates 
     KappaKappaExpSquaredKernel (const long ndim, M* metric)
-      : ExpSquaredKernel<M>(ndim, metric){}; 
+      : ExpSquaredKernel<M>(ndim, metric){
+      
+      
+      }; 
 }; 
 
 template <typename M>

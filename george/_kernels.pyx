@@ -20,7 +20,7 @@ def _rebuild(kernel_spec):
     return CythonKernel(kernel_spec)
 
 def _rebuild_kernderiv(kernel_spec):
-    # I am not quite sure what this does
+    # I am not sure what this does
     return CythonDerivKernel(kernel_spec)
 
 
@@ -55,7 +55,7 @@ cdef class CythonDerivKernel(CythonKernel):
     def __termA__(self, np.ndarray[DTYPE_t, ndim=2] coords,
                   np.ndarray[DTYPE_int_t, ndim=1] ix,
                   unsigned int m, unsigned int n,
-                  bool_t debug=True):
+                  bool_t debug=False):
         """
         # the constructor also needs the coordinates
         Compute term 1 in equation (24) without leading factors of $\beta^4$
@@ -72,17 +72,27 @@ cdef class CythonDerivKernel(CythonKernel):
         .. math:
             X_i X_j X_h X_k
         """
-        cdef double term = 1
+        cdef double term = 1.
 
+        if debug:
+            print "---------------------------------"
         for i in ix:
+            if debug:
+                print "parts of term A = {0}".format(term)
             term *= self.__X__(coords, m, n, i)
+
+        if debug:
+            print "m = {0}, n = {1}".format(m, n)
+            print "indices of term A ix = {0}".format(ix)
+            print "term A = {0}".format(term)
+            print "---------------------------------"
 
         return term
 
     def __termB__(self, np.ndarray[DTYPE_t, ndim=2] coords,
                   np.ndarray[DTYPE_int_t, ndim=1] ix,
                   unsigned int m, unsigned int n,
-                  np.ndarray[DTYPE_t, ndim=1] metric, debug=True):
+                  np.ndarray[DTYPE_t, ndim=1] metric, debug=False):
         """
         Compute term 2 in equation (24) without leading factors of $\beta^3$
 
@@ -106,7 +116,12 @@ cdef class CythonDerivKernel(CythonKernel):
             X_a X_b D_{cd} \delta_{cd}
         """
         if debug is True:
+            print "---------------------------------"
+            print "m = {0}, n = {1}".format(m, n)
             print "indices of term B = {0}".format(ix)
+            print "termB = {0}".format(self.__X__(coords, m, n, ix[0]) *
+            self.__X__(coords, m, n, ix[1]) *
+            metric[ix[2]])
 
         if ix[2] != ix[3]:
             return 0
@@ -118,7 +133,7 @@ cdef class CythonDerivKernel(CythonKernel):
     def __termC__(self, np.ndarray[DTYPE_t, ndim=2] coords,
                   np.ndarray[DTYPE_int_t, ndim=1] ix,
                   np.ndarray[DTYPE_t, ndim=1] metric,
-                  bool_t debug=True):
+                  bool_t debug=False):
         """
         Compute term 3 in equation (24) without leading factor of $\beta^2$
 
@@ -135,7 +150,9 @@ cdef class CythonDerivKernel(CythonKernel):
             D_{ab} D_{cd} \delta_{ab} \delta_{cd}
         """
         if debug:
+            print "---------------------------------"
             print "indices of term C = {0}".format(ix)
+            print "term C = {0}".format(metric[ix[2]] * metric[ix[0]])
 
         if ix[0] != ix[1]:
             return 0
@@ -150,7 +167,7 @@ cdef class CythonDerivKernel(CythonKernel):
                           np.ndarray[DTYPE_int_t, ndim=1] ix,
                           unsigned int m, unsigned int n,
                           np.ndarray[DTYPE_t, ndim=1] metric,
-                          bool_t debug=True):
+                          bool_t debug=False):
         """
         Gather the 10 terms for the 4th derivative of each Sigma
         given the ix for each the derivatives are taken w.r.t.
@@ -183,9 +200,12 @@ cdef class CythonDerivKernel(CythonKernel):
         termA = self.__termA__(coords, ix, m, n)
 
         if debug:
+            print "---------------------------------"
+            print "m = {0}, n = {1}".format(m, n)
             print "combBix is ", combBix
             print "combCix is ", combCix
-            print "terms are {0}, {1}, {2}".format(termA, allTermBs, allTermCs)
+            print "combined terms A, B, C are \n" + \
+            " {0}, {1}, {2}".format(termA, allTermBs, allTermCs)
 
         return (beta ** 4. * termA -
                 beta ** 3. * allTermBs +
@@ -207,7 +227,7 @@ cdef class CythonDerivKernel(CythonKernel):
         # should add a check to make sure that pars is a float not a list
 
         return [[self.__Sigma4thDeriv__(pars, x, ix, m, n, metric,
-                                        debug=True)
+                                        debug=False)
                 for m in range(x.shape[0])]
                 for n in range(x.shape[0])
                 ]
@@ -280,9 +300,36 @@ cdef class CythonDerivKernel(CythonKernel):
         return k
 
     @cython.boundscheck(False)
-    # have to think about what to do with the gradient function
-    # this should also be modified
+    def value_general(self, np.ndarray[DTYPE_t, ndim=2] x1,
+                      np.ndarray[DTYPE_t, ndim=2] x2,
+                      np.ndarray[DTYPE_int_t, ndim=2] ix_list,
+                      double pars,
+                      np.ndarray[DTYPE_int_t, ndim=1] terms_signs,
+                      np.ndarray[DTYPE_t, ndim=1] metric):
+        # Parse the input kernel spec.
+        cdef unsigned int n1 = x1.shape[0], ndim = x1.shape[1], n2 = x2.shape[0]
+        if self.kernel.get_ndim() != ndim or x2.shape[1] != ndim:
+            raise ValueError("Dimension mismatch")
+
+        cdef np.ndarray[DTYPE_t, ndim=2] LambDa = \
+            self.kernel_deriv_coeff(x1, ix_list, pars, terms_signs, metric)
+
+        # Build the kernel matrix.
+        cdef double value
+        cdef unsigned int i, j, d1 = x1.strides[0], d2 = x2.strides[0]
+        cdef np.ndarray[DTYPE_t, ndim=2] k = np.empty((n1, n2), dtype=DTYPE)
+        for i in range(n1):
+            for j in range(n2):
+                k[i, j] = self.kernel.value(<double*>(x1.data + i*d1),
+                                            <double*>(x2.data + j*d2)) * \
+                    LambDa[i, j]
+
+        return k
+
+    @cython.boundscheck(False)
     def gradient_symmetric(self, np.ndarray[DTYPE_t, ndim=2] x):
+        # have to think about what to do with the gradient function
+        # this should also be modified
         # Check the input dimensions.
         cdef unsigned int n = x.shape[0], ndim = x.shape[1]
         if self.kernel.get_ndim() != ndim:
@@ -308,6 +355,7 @@ cdef class CythonDerivKernel(CythonKernel):
                     g[j, i, k] = g[i, j, k]
 
         return g
+
 
 cdef class CythonKernel:
 
@@ -415,6 +463,3 @@ cdef class CythonKernel:
                                      <double*>(g.data + i*dx + j*dy))
 
         return g
-
-
-

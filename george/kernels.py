@@ -554,11 +554,13 @@ class KappaKappaExpSquaredKernel(ExpSquaredKernel):
             return self.kernel.value_symmetric(x1, self.__ix_list__,
                                                self.pars[-1],
                                                self.__terms_signs__,
-                                               np.ones(x1.ndim)
-                                               )
-        else:
-            raise NotImplementedError(
-                "Non symmetric DerivKernel not implemented")
+                                               np.ones(x1.ndim))
+
+        x2 = np.ascontiguousarray(x2, dtype=np.float64)
+        return self.kernel.value_general(x1, x2, self.__ix_list,
+                                         self.par[-1],
+                                         self.__terms_signs__,
+                                         np.ones(x1.ndim))
 
 
 class KappaGamma1ExpSquaredKernel(ExpSquaredKernel):
