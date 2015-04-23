@@ -165,6 +165,7 @@ public:
 };
 
 
+
 //
 // BASIC KERNELS
 //
@@ -392,19 +393,21 @@ public:
        
       }; 
 
-    virtual double value (const double* x1, const double* x2, 
-                          int m, int n) const {
+    virtual double value (const double* x1, const double* x2) {
         // should combine indices for this 
         return 0.0;
     };
 
 protected:
     double X(const double* x1, const double* x2, 
-            const int spatial_ix, const vector<int> metric) const{ 
+            const int spatial_ix, M* metric) const{ 
         return (x1[spatial_ix] - x2[spatial_ix]) * metric[spatial_ix];
     }
 
     vector< vector<int> > get_termB_ixes(){
+        // I am not sure if it is better to create a vector 
+        // or a 2D dynamic array in terms of memory usage.
+        // Seems like either way, this method will be called N^2 times.
         unsigned int r, c;
         vector<vector<int> > v2d;
         vector<int> rowvector;
@@ -454,7 +457,7 @@ protected:
     }
 
     double termB(const double* x1, const double* x2, 
-                 const vector<int> ix, const vector<int> metric) const {
+                 const vector<int> ix, M* metric) const {
         // there should also be a metric term here ...
         if (ix[2] != ix[3]) { return 0; }
 
@@ -462,11 +465,28 @@ protected:
             metric[ix[2]];
     }
 
-    double termC(const vector<int> ix, const vector<int> metric) const {
+    double termC(const vector<int> ix, M* metric) const {
         if (ix[0] != ix[1]) { return 0; } 
         if (ix[2] != ix[3]) { return 0; }
         return metric[ix[2]] * metric[ix[0]];
     }
+
+    /* vector< vector<int> > combine_B_ixes(const vector< vector <int> > B_ix){
+        unsigned int rows = B_ix.size(), cols = B_ix[0].size();
+        unsigned int r, c;
+        vector< vector<int> > ix = this->get_termB_ixes();
+        vector< vector<int> > termB_ixes;
+        vector<int> temp_row;
+
+        for (r = 0; r < rows; r++){
+            temp_row.clear();
+            for (c = 0; c < cols; c++){
+                temp_row.push_back(B_ix[ix[r][c]]);
+            }
+            termB_ixes.push_back(temp_row);
+        }
+        return termB_ixes;
+    }*/
 };
 
 
