@@ -401,13 +401,14 @@ public:
 protected:
     double X(const double* x1, const double* x2, 
             const int spatial_ix, M* metric) const{ 
-        return (x1[spatial_ix] - x2[spatial_ix]) * metric[spatial_ix];
+        return (x1[spatial_ix] - x2[spatial_ix]) * 
+            metric->get_parameter[spatial_ix];
     }
 
     vector< vector<int> > get_termB_ixes(){
         // I am not sure if it is better to create a vector 
         // or a 2D dynamic array in terms of memory usage.
-        // Seems like either way, this method will be called N^2 times.
+        // Seems like either way, this method will be called N^2 / 2. times.
         unsigned int r, c;
         vector<vector<int> > v2d;
         vector<int> rowvector;
@@ -448,33 +449,34 @@ protected:
         return v2d;
     }
 
-    double termA(const double* x1, const double* x2, vector<int> ix){
+    double termA(const double* x1, const double* x2, vector<int> ix,
+                 M* metric){
         double term = 1.;
         for (vector<int>::iterator it=ix.begin(); it != ix.end(); ++it){ 
-            term *= this->X(x1, x2, it);
+            term *= this->X(x1, x2, it, metric);
         }
         return term;
     }
 
     double termB(const double* x1, const double* x2, 
                  const vector<int> ix, M* metric) const {
-        // there should also be a metric term here ...
         if (ix[2] != ix[3]) { return 0; }
 
-        return this->X(x1, x2, ix[0]) * this->X(x1, x2, ix[1]) * 
-            metric[ix[2]];
+        return this->X(x1, x2, ix[0], metric) * this->X(x1, x2, ix[1], metric) * 
+            metric->get_parameter(ix[2]);
     }
 
     double termC(const vector<int> ix, M* metric) const {
         if (ix[0] != ix[1]) { return 0; } 
         if (ix[2] != ix[3]) { return 0; }
-        return metric[ix[2]] * metric[ix[0]];
+        return metric->get_parameter(ix[2]) * metric->get_parameter(ix[0]);
     }
 
-    /* vector< vector<int> > combine_B_ixes(const vector< vector <int> > B_ix){
-        unsigned int rows = B_ix.size(), cols = B_ix[0].size();
-        unsigned int r, c;
+    vector< vector<int> > combine_B_ixes(const vector<int> B_ix){
+        // @param B_ix contain the kernel indices, a list of 4 integers 
         vector< vector<int> > ix = this->get_termB_ixes();
+        unsigned int rows = ix.size(), cols = ix[0].size();
+        unsigned int r, c;
         vector< vector<int> > termB_ixes;
         vector<int> temp_row;
 
@@ -486,15 +488,69 @@ protected:
             termB_ixes.push_back(temp_row);
         }
         return termB_ixes;
+    }
+
+    vector< vector<int> > combine_C_ixes(const vector<int> C_ix){
+        // @param C_ix contain the kernel indices 
+        vector< vector<int> > ix = this->get_termC_ixes();
+        unsigned int rows = ix.size(), cols = ix[0].size();
+        unsigned int r, c;
+        vector< vector<int> > termC_ixes;
+        vector<int> temp_row;
+
+        for (r = 0; r < rows; r++){
+            temp_row.clear();
+            for (c = 0; c < cols; c++){
+                temp_row.push_back(C_ix[ix[r][c]]);
+            }
+            termC_ixes.push_back(temp_row);
+        }
+        return termC_ixes;
+    }
+
+    double Sigma4thDeriv(const vector<int> ix, const double* x1, 
+            const double* x2, M* metric){
+        // if we do decide to separate beta from the metric 
+        double allTermBs = 0.;
+        double allTermCs = 0.;
+
+        vector< vector<int> > combine_B_ixes = 
+            this->combine_B_ixes(ix);
+
+        vector< vector<int> > combine_C_ixes = 
+            this->combine_C_ixes(ix); 
+
+        for (vector< vector<int> >::iterator row_it = combine_B_ixes.begin();
+           row_it < combine_B_ixes.end(); ++row_it ){
+           allTermBs *= termB(x1, x2, row_it, metric); 
+        }
+        
+        for (vector< vector<int> >::iterator row_it = combine_C_ixes.begin();
+           row_it < combine_C_ixes.end(); ++row_it ){
+           allTermCs *= termC(x1, x2, row_it, metric); 
+        }
+
+        double termA = this->termA(x1, x2, ix);
+
+        // beta = metric currently and are multipled within the functions
+        // for getting each term  so we don't have to multiply beta again.
+        return (termA - allTermBs + allTermCs) / 4.;
+    }
+
+
+    /*double compute_Sigma4deriv_matrix(double* x1, double* x2, 
+                                      vector<int> ix, M* metric){
+
+        return 0;
     }*/
 };
 
 
 template <typename M>
-class KappaKappaExpSquaredKernel: public ExpSquaredKernel<M>{
+class KappaKappaExpSquaredKernel: public DerivativeExpSquaredKernel<M>{
 public: 
     KappaKappaExpSquaredKernel (const long ndim, M* metric)
-      : ExpSquaredKernel<M>(ndim, metric){}; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
     
     double lambda(const double* x1, const double* x2){
     }; 
