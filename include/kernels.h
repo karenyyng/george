@@ -399,9 +399,9 @@ public:
     };
 
 protected:
-    double X(const double* x1, const double* x2, const int spatial_ix) const {
-        // to do: we need to multiply a factor of the metric 
-        return x1[spatial_ix] - x2[spatial_ix];
+    double X(const double* x1, const double* x2, 
+            const int spatial_ix, const vector<int> metric) const{ 
+        return (x1[spatial_ix] - x2[spatial_ix]) * metric[spatial_ix];
     }
 
     vector< vector<int> > get_termB_ixes(){
@@ -445,13 +445,27 @@ protected:
         return v2d;
     }
 
-    double termA(const double* x1, const double* x2, const int m, const int n,
-                 vector<int> ix){
+    double termA(const double* x1, const double* x2, vector<int> ix){
         double term = 1.;
         for (vector<int>::iterator it=ix.begin(); it != ix.end(); ++it){ 
             term *= this->X(x1, x2, it);
         }
         return term;
+    }
+
+    double termB(const double* x1, const double* x2, 
+                 const vector<int> ix, const vector<int> metric) const {
+        // there should also be a metric term here ...
+        if (ix[2] != ix[3]) { return 0; }
+
+        return this->X(x1, x2, ix[0]) * this->X(x1, x2, ix[1]) * 
+            metric[ix[2]];
+    }
+
+    double termC(const vector<int> ix, const vector<int> metric) const {
+        if (ix[0] != ix[1]) { return 0; } 
+        if (ix[2] != ix[3]) { return 0; }
+        return metric[ix[2]] * metric[ix[0]];
     }
 };
 
