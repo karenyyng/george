@@ -392,15 +392,24 @@ public:
        
       }; 
 
-    virtual double value (const double* x1, const double* x2) const {
+    virtual double value (const double* x1, const double* x2, 
+                          int m, int n) const {
         // should combine indices for this 
         return 0.0;
     };
 
 protected:
+    double X(const double* x1, const double* x2, const int spatial_ix) const {
+        // to do: we need to multiply a factor of the metric 
+        return x1[spatial_ix] - x2[spatial_ix];
+    }
+
     vector< vector<int> > get_termB_ixes(){
         unsigned int r, c;
+        vector<vector<int> > v2d;
+        vector<int> rowvector;
         const int rows = 6, cols = 4;
+
         int arr[rows][cols] = {{0, 1, 2, 3}, 
                                {0, 2, 1, 3},
                                {0, 3, 1, 2},
@@ -408,19 +417,9 @@ protected:
                                {1, 3, 0, 2},
                                {1, 2, 0, 3}};
 
-
-        typedef vector<vector<int> > vec2D;
-        vec2D v2d;
-
-        vector<int> rowvector;
-
         for (r = 0; r < rows; r++) {
             rowvector.clear();
-            for (c = 0; c < cols; c++ ) {
-                rowvector.push_back(arr[r][c]);
-                std::cout << arr[r][c];
-            } 
-            std::cout << std::endl;
+            for (c = 0; c < cols; c++ ) { rowvector.push_back(arr[r][c]); }
             v2d.push_back(rowvector);
         }
 
@@ -429,28 +428,30 @@ protected:
 
     vector< vector<int> > get_termC_ixes(){
         unsigned int r, c;
+        vector<vector<int> > v2d;
+        vector<int> rowvector;
         const int rows = 3, cols = 4;
+
         int arr[rows][cols] = {{0, 1, 2, 3}, 
                                {0, 2, 1, 3},
                                {0, 3, 1, 2}};
 
-
-        typedef vector<vector<int> > vec2D;
-        vec2D v2d;
-
-        vector<int> rowvector;
-
         for (r = 0; r < rows; r++) {
             rowvector.clear();
-            for (c = 0; c < cols; c++ ) {
-                rowvector.push_back(arr[r][c]);
-                std::cout << arr[r][c];
-            } 
-            std::cout << std::endl;
+            for (c = 0; c < cols; c++ ) { rowvector.push_back(arr[r][c]); }
             v2d.push_back(rowvector);
         }
 
         return v2d;
+    }
+
+    double termA(const double* x1, const double* x2, const int m, const int n,
+                 vector<int> ix){
+        double term = 1.;
+        for (vector<int>::iterator it=ix.begin(); it != ix.end(); ++it){ 
+            term *= this->X(x1, x2, it);
+        }
+        return term;
     }
 };
 

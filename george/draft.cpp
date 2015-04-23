@@ -27,19 +27,16 @@ using std::vector;  // avoid having to write std:: all the time
 
 vector< vector<int> > get_termB_ixes(){
     unsigned int r, c;
+    vector<vector<int> > v2d;
+    vector<int> rowvector;
     const int rows = 6, cols = 4;
+
     int arr[rows][cols] = {{0, 1, 2, 3}, 
                            {0, 2, 1, 3},
                            {0, 3, 1, 2},
                            {2, 3, 0, 1},
                            {1, 3, 0, 2},
                            {1, 2, 0, 3}};
-
-
-    typedef vector<vector<int> > vec2D;
-    vec2D v2d;
-
-    vector<int> rowvector;
 
     for (r = 0; r < rows; r++) {
         rowvector.clear();
