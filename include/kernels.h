@@ -490,15 +490,15 @@ private:
         vector<int> rowvec; 
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
-        arr[rows][cols] = {{0, 0, 0, 0},
-                           {0, 0, 1, 1},
-                           {1, 1, 0, 0},
-                           {1, 1, 1, 1}};
+        int arr[rows][cols] = {{0, 0, 0, 0},
+                               {0, 0, 1, 1},
+                               {1, 1, 0, 0},
+                               {1, 1, 1, 1}};
 
         for (r = 0; r < rows; r++){
             rowvec.clear();
-            for (c = 0; c < cols; c++){ rowvec.pushback(arr[r][c]); }
-            v2d.pushback(rowvec);
+            for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
+            v2d.push_back(rowvec);
         }
         return v2d;
     }
