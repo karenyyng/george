@@ -164,6 +164,28 @@ public:
     };
 };
 
+class DerivProduct : public Product{
+public:
+    DerivProduct (const unsigned int ndim, Kernel* k1, Kernel* k2)
+        : Product(ndim, k1, k2) {};
+
+    double value (const double* x1, const double* x2) const {
+        return this->kernel1_->value(x1, x2) * this->kernel2_->value(x1, x2) * 
+            this->kernel2_->Sigma4thDeriv(x1, x2);
+    };
+
+    void gradient (const double* x1, const double* x2, double* grad) const {
+        unsigned int i, n1 = this->kernel1_->size(), n2 = this->size();
+
+        this->kernel1_->gradient(x1, x2, grad);
+        this->kernel2_->gradient(x1, x2, &(grad[n1]));
+
+        double k1 = this->kernel1_->value(x1, x2),
+               k2 = this->kernel2_->value(x1, x2);
+        for (i = 0; i < n1; ++i) grad[i] *= k2;
+        for (i = n1; i < n2; ++i) grad[i] *= k1;
+    };
+};
 
 
 //
@@ -544,7 +566,6 @@ protected:
         return 0;
     }*/
 };
-
 
 template <typename M>
 class KappaKappaExpSquaredKernel: public DerivativeExpSquaredKernel<M>{

@@ -3,7 +3,7 @@
 from __future__ import division, print_function
 
 __all__ = [
-    "Sum", "Product", "Kernel",
+    "Sum", "Product", "Kernel", "DerivProduct",
     "ConstantKernel", "WhiteKernel", "DotProductKernel",
     "RadialKernel", "ExpKernel", "ExpSquaredKernel",
     "CosineKernel", "ExpSine2Kernel",
@@ -527,45 +527,45 @@ class KappaKappaExpSquaredKernel(ExpSquaredKernel):
     """
     kernel_type = 10
 
-    def __init__(self, *pars, **kwargs):
-        super(ExpSquaredKernel, self).__init__(*pars, **kwargs)
+    # def __init__(self, *pars, **kwargs):
+    #     super(ExpSquaredKernel, self).__init__(*pars, **kwargs)
 
-        # python arrays are zeroth indexed
-        self.__ix_list__ = np.array([[1, 1, 1, 1],
-                                     [1, 1, 2, 2],
-                                     [2, 2, 1, 1],
-                                     [2, 2, 2, 2]]) - 1
+    #     # python arrays are zeroth indexed
+    #     self.__ix_list__ = np.array([[1, 1, 1, 1],
+    #                                  [1, 1, 2, 2],
+    #                                  [2, 2, 1, 1],
+    #                                  [2, 2, 2, 2]]) - 1
 
-        self.__terms_signs__ = np.array([1, 1, 1, 1])
+    #     self.__terms_signs__ = np.array([1, 1, 1, 1])
 
-    @property
-    def kernel(self):
-        if self.dirty or self._kernel is None:
-            # this is where the Cython code is called
-            self._kernel = CythonDerivKernel(self)
-            self.dirty = False
-        return self._kernel
+    # @property
+    # def kernel(self):
+    #     if self.dirty or self._kernel is None:
+    #         # this is where the Cython code is called
+    #         self._kernel = CythonDerivKernel(self)
+    #         self.dirty = False
+    #     return self._kernel
 
-    def value(self, x1, x2=None):
-        x1 = np.ascontiguousarray(x1, dtype=np.float64)
-        if x2 is None:
-            # we need to pass the values in since the Cython code
-            # may not be able to parse Python values from self
-            return self.kernel.value_symmetric(x1, self.__ix_list__,
-                                               self.pars[-1],
-                                               self.__terms_signs__,
-                                               np.ones(x1.ndim))
+    # def value(self, x1, x2=None):
+    #     x1 = np.ascontiguousarray(x1, dtype=np.float64)
+    #     if x2 is None:
+    #         # we need to pass the values in since the Cython code
+    #         # may not be able to parse Python values from self
+    #         return self.kernel.value_symmetric(x1, self.__ix_list__,
+    #                                            self.pars[-1],
+    #                                            self.__terms_signs__,
+    #                                            np.ones(x1.ndim))
 
-        x2 = np.ascontiguousarray(x2, dtype=np.float64)
-        return self.kernel.value_general(x1, x2, self.__ix_list,
-                                         self.par[-1],
-                                         self.__terms_signs__,
-                                         np.ones(x1.ndim))
+    #     x2 = np.ascontiguousarray(x2, dtype=np.float64)
+    #     return self.kernel.value_general(x1, x2, self.__ix_list,
+    #                                      self.par[-1],
+    #                                      self.__terms_signs__,
+    #                                      np.ones(x1.ndim))
 
     def __mul__(self, b):
         if not hasattr(b, "is_kernel"):
-            return Product(ConstantKernel(float(b), ndim=self.ndim), self)
-        return Product(self, b)
+            return DerivProduct(ConstantKernel(float(b), ndim=self.ndim), self)
+        return DerivProduct(self, b)
 
 
 class KappaGamma1ExpSquaredKernel(ExpSquaredKernel):
@@ -580,6 +580,10 @@ class KappaGamma1ExpSquaredKernel(ExpSquaredKernel):
         eqn (5) from kern_deriv.pdf
     """
     kernel_type = 11
+    def __mul__(self, b):
+        if not hasattr(b, "is_kernel"):
+            return DerivProduct(ConstantKernel(float(b), ndim=self.ndim), self)
+        return DerivProduct(self, b)
 
     @property
     def kernel(self):
