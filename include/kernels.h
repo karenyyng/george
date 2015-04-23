@@ -479,12 +479,35 @@ public:
     double lambda(const double* x1, const double* x2){
     }; 
 
+
     double value (const double* x1, const double* x2) const {
         return exp(-0.5 * this->get_squared_distance(x1, x2)); // * this -> lambda(x1, x2);
     };
 
-    double* B_ixes();
+private:
+    vector< vector<int> > ix_list(){
+        vector< vector<int> > v2d;
+        vector<int> rowvec; 
+        unsigned int r = 0, c = 0;
+        const int rows = 4, cols = 4;
+        arr[rows][cols] = {{0, 0, 0, 0},
+                           {0, 0, 1, 1},
+                           {1, 1, 0, 0},
+                           {1, 1, 1, 1}};
 
+        for (r = 0; r < rows; r++){
+            rowvec.clear();
+            for (c = 0; c < cols; c++){ rowvec.pushback(arr[r][c]); }
+            v2d.pushback(rowvec);
+        }
+        return v2d;
+    }
+
+    vector<double> terms_signs(){
+        const double arr[4] = {1., 1., 1., 1.};
+        vector<double> signs (arr, arr + sizeof(arr) / sizeof(int));
+        return signs;
+    }
 };
 
 template <typename M>
