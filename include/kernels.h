@@ -164,30 +164,6 @@ public:
     };
 };
 
-class DerivProduct : public Product{
-public:
-    DerivProduct (const unsigned int ndim, Kernel* k1, Kernel* k2)
-        : Product(ndim, k1, k2) {};
-
-    double value (const double* x1, const double* x2) const {
-        return this->kernel1_->value(x1, x2) * this->kernel2_->value(x1, x2) * 
-            this->kernel2_->Sigma4thDeriv(x1, x2);
-    };
-
-    void gradient (const double* x1, const double* x2, double* grad) const {
-        unsigned int i, n1 = this->kernel1_->size(), n2 = this->size();
-
-        this->kernel1_->gradient(x1, x2, grad);
-        this->kernel2_->gradient(x1, x2, &(grad[n1]));
-
-        double k1 = this->kernel1_->value(x1, x2),
-               k2 = this->kernel2_->value(x1, x2);
-        for (i = 0; i < n1; ++i) grad[i] *= k2;
-        for (i = n1; i < n2; ++i) grad[i] *= k1;
-    };
-};
-
-
 //
 // BASIC KERNELS
 //
@@ -411,9 +387,7 @@ public:
     // have to figure out if this constructor is correct 
     // x1 is supposed to be the coordinates 
     DerivativeExpSquaredKernel (const long ndim, M* metric)
-      : ExpSquaredKernel<M>(ndim, metric){
-       
-      }; 
+      : ExpSquaredKernel<M>(ndim, metric){}; 
 
     virtual double value (const double* x1, const double* x2) {
         // should combine indices for this 
@@ -422,9 +396,9 @@ public:
 
 protected:
     double X(const double* x1, const double* x2, 
-            const int spatial_ix, M* metric) const{ 
+            const int spatial_ix) const{ 
         return (x1[spatial_ix] - x2[spatial_ix]) * 
-            metric->get_parameter[spatial_ix];
+            this->get_parameter(spatial_ix);
     }
 
     vector< vector<int> > get_termB_ixes(){
@@ -471,27 +445,26 @@ protected:
         return v2d;
     }
 
-    double termA(const double* x1, const double* x2, vector<int> ix,
-                 M* metric){
+    double termA(const double* x1, const double* x2, vector<int> ix){
         double term = 1.;
         for (vector<int>::iterator it=ix.begin(); it != ix.end(); ++it){ 
-            term *= this->X(x1, x2, it, metric);
+            term *= this->X(x1, x2, it);
         }
         return term;
     }
 
     double termB(const double* x1, const double* x2, 
-                 const vector<int> ix, M* metric) const {
+                 const vector<int> ix) const {
         if (ix[2] != ix[3]) { return 0; }
 
-        return this->X(x1, x2, ix[0], metric) * this->X(x1, x2, ix[1], metric) * 
-            metric->get_parameter(ix[2]);
+        return this->X(x1, x2, ix[0]) * this->X(x1, x2, ix[1]) * 
+            this->get_parameter(ix[2]);
     }
 
-    double termC(const vector<int> ix, M* metric) const {
+    double termC(const vector<int> ix) const {
         if (ix[0] != ix[1]) { return 0; } 
         if (ix[2] != ix[3]) { return 0; }
-        return metric->get_parameter(ix[2]) * metric->get_parameter(ix[0]);
+        return this->get_parameter(ix[2]) * this->get_parameter(ix[0]);
     }
 
     vector< vector<int> > combine_B_ixes(const vector<int> B_ix){
@@ -531,7 +504,7 @@ protected:
     }
 
     double Sigma4thDeriv(const vector<int> ix, const double* x1, 
-            const double* x2, M* metric){
+            const double* x2){
         // if we do decide to separate beta from the metric 
         double allTermBs = 0.;
         double allTermCs = 0.;
@@ -544,12 +517,12 @@ protected:
 
         for (vector< vector<int> >::iterator row_it = combine_B_ixes.begin();
            row_it < combine_B_ixes.end(); ++row_it ){
-           allTermBs *= termB(x1, x2, row_it, metric); 
+           allTermBs *= termB(x1, x2, row_it); 
         }
         
         for (vector< vector<int> >::iterator row_it = combine_C_ixes.begin();
            row_it < combine_C_ixes.end(); ++row_it ){
-           allTermCs *= termC(x1, x2, row_it, metric); 
+           allTermCs *= termC(x1, x2, row_it); 
         }
 
         double termA = this->termA(x1, x2, ix);
@@ -568,15 +541,39 @@ protected:
 };
 
 template <typename M>
+class DerivProduct : public Product{
+public:
+    DerivProduct (const unsigned int ndim, Kernel* k1, 
+            DerivativeExpSquaredKernel<M>* k2)
+        : Product(ndim, k1, k2) {};
+
+    double value (const double* x1, const double* x2) const {
+        // potential bug for how we get metric this way
+        double metric = this->get_parameter(0);
+        return this->kernel1_->value(x1, x2) * this->kernel2_->value(x1, x2) * 
+            this->kernel2_->Sigma4thDeriv(x1, x2, metric);
+    };
+
+    void gradient (const double* x1, const double* x2, double* grad) const {
+        unsigned int i, n1 = this->kernel1_->size(), n2 = this->size();
+
+        this->kernel1_->gradient(x1, x2, grad);
+        this->kernel2_->gradient(x1, x2, &(grad[n1]));
+
+        double k1 = this->kernel1_->value(x1, x2),
+               k2 = this->kernel2_->value(x1, x2);
+        for (i = 0; i < n1; ++i) grad[i] *= k2;
+        for (i = n1; i < n2; ++i) grad[i] *= k1;
+    };
+
+};
+
+template <typename M>
 class KappaKappaExpSquaredKernel: public DerivativeExpSquaredKernel<M>{
 public: 
     KappaKappaExpSquaredKernel (const long ndim, M* metric)
       : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
     
-    double lambda(const double* x1, const double* x2){
-    }; 
-
-
     double value (const double* x1, const double* x2) const {
         return exp(-0.5 * this->get_squared_distance(x1, x2)); // * this -> lambda(x1, x2);
     };
