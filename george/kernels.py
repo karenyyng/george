@@ -3,7 +3,7 @@
 from __future__ import division, print_function
 
 __all__ = [
-    "Sum", "Product", "Kernel", "DerivProduct",
+    "Sum", "Product", "Kernel",
     "ConstantKernel", "WhiteKernel", "DotProductKernel",
     "RadialKernel", "ExpKernel", "ExpSquaredKernel",
     "CosineKernel", "ExpSine2Kernel",
@@ -21,7 +21,7 @@ __all__ = [
 import numpy as np
 from functools import partial
 
-from ._kernels import CythonKernel, CythonDerivKernel
+from ._kernels import CythonKernel
 from .utils import numerical_gradient
 # import matplotlib.pyplot as plt
 # from custom_kernel import *
@@ -562,11 +562,6 @@ class KappaKappaExpSquaredKernel(ExpSquaredKernel):
     #                                      self.__terms_signs__,
     #                                      np.ones(x1.ndim))
 
-    def __mul__(self, b):
-        if not hasattr(b, "is_kernel"):
-            return DerivProduct(ConstantKernel(float(b), ndim=self.ndim), self)
-        return DerivProduct(self, b)
-
 
 class KappaGamma1ExpSquaredKernel(ExpSquaredKernel):
     """
@@ -580,17 +575,6 @@ class KappaGamma1ExpSquaredKernel(ExpSquaredKernel):
         eqn (5) from kern_deriv.pdf
     """
     kernel_type = 11
-    def __mul__(self, b):
-        if not hasattr(b, "is_kernel"):
-            return DerivProduct(ConstantKernel(float(b), ndim=self.ndim), self)
-        return DerivProduct(self, b)
-
-    @property
-    def kernel(self):
-        if self.dirty or self._kernel is None:
-            self._kernel = CythonDerivKernel(self)
-            self.dirty = False
-        return self._kernel
 
 
 class KappaGamma2ExpSquaredKernel(ExpSquaredKernel):
@@ -605,13 +589,6 @@ class KappaGamma2ExpSquaredKernel(ExpSquaredKernel):
         eqn (6) from kern_deriv.pdf
     """
     kernel_type = 12
-
-    @property
-    def kernel(self):
-        if self.dirty or self._kernel is None:
-            self._kernel = CythonDerivKernel(self)
-            self.dirty = False
-        return self._kernel
 
 
 class Gamma1Gamma1ExpSquaredKernel(ExpSquaredKernel):

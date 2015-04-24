@@ -391,12 +391,12 @@ public:
 
 protected:
     double X(const double* x1, const double* x2, 
-            const int spatial_ix) const{ 
+            const int spatial_ix){ 
         return (x1[spatial_ix] - x2[spatial_ix]) * 
             this->get_parameter(spatial_ix);
     }
 
-    vector< vector<int> > get_termB_ixes() const{
+    vector< vector<int> > get_termB_ixes(){
         // I am not sure if it is better to create a vector 
         // or a 2D dynamic array in terms of memory usage.
         // Seems like either way, this method will be called N^2 / 2. times.
@@ -421,7 +421,7 @@ protected:
         return v2d;
     }
 
-    vector< vector<int> > get_termC_ixes() const{
+    vector< vector<int> > get_termC_ixes(){
         unsigned int r, c;
         vector<vector<int> > v2d;
         vector<int> rowvector;
@@ -440,29 +440,30 @@ protected:
         return v2d;
     }
 
-    double termA(const double* x1, const double* x2, vector<int> ix) const {
+    double termA(const double* x1, const double* x2, vector<int> ix) {
         double term = 1.;
         for (vector<int>::iterator it=ix.begin(); it != ix.end(); ++it){ 
             term *= this->X(x1, x2, *it);
         }
+        std::cout << term << std::endl;
         return term;
     }
 
     double termB(const double* x1, const double* x2, 
-                 const vector<int> ix) const {
+                 const vector<int> ix) {
         if (ix[2] != ix[3]) { return 0; }
 
         return this->X(x1, x2, ix[0]) * this->X(x1, x2, ix[1]) * 
             this->get_parameter(ix[2]);
     }
 
-    double termC(const vector<int> ix) const {
+    double termC(const vector<int> ix) {
         if (ix[0] != ix[1]) { return 0; } 
         if (ix[2] != ix[3]) { return 0; }
         return this->get_parameter(ix[2]) * this->get_parameter(ix[0]);
     }
 
-    vector< vector<int> > combine_B_ixes(const vector<int> B_ix) const{
+    vector< vector<int> > combine_B_ixes(const vector<int> B_ix){
         // @param B_ix contain the kernel indices, a list of 4 integers 
         vector< vector<int> > ix = this->get_termB_ixes();
         unsigned int rows = ix.size(), cols = ix[0].size();
@@ -480,7 +481,7 @@ protected:
         return termB_ixes;
     }
 
-    vector< vector<int> > combine_C_ixes(const vector<int> C_ix) const{
+    vector< vector<int> > combine_C_ixes(const vector<int> C_ix){
         // @param C_ix contain the kernel indices 
         vector< vector<int> > ix = this->get_termC_ixes();
         unsigned int rows = ix.size(), cols = ix[0].size();
@@ -499,7 +500,7 @@ protected:
     }
 
     double Sigma4thDeriv(const vector<int> ix, const double* x1, 
-            const double* x2) const{
+            const double* x2){
         // if we do decide to separate beta from the metric 
         double allTermBs = 0.;
         double allTermCs = 0.;
@@ -530,7 +531,7 @@ protected:
 
     double compute_Sigma4deriv_matrix(const double* x1,const double* x2, 
                                       const vector< vector<int> > ix, 
-                                      const vector<double> signs) const{
+                                      const vector<double> signs){
         double term = 0;
         unsigned int r;
         int rows = ix.size();  // this should be 4 
@@ -548,7 +549,8 @@ public:
     KappaKappaExpSquaredKernel (const long ndim, M* metric)
       : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
     
-    double value (const double* x1, const double* x2) const {
+    double value (const double* x1, const double* x2) {
+        std::cout << "Inside modified value method" << std::endl;
         const vector< vector<int> > ix_list = this->ix_list();
         vector<double> signs = this->terms_signs();
         return exp(-0.5 * this->get_squared_distance(x1, x2)) 
@@ -556,7 +558,7 @@ public:
     };
 
 private:
-    vector< vector<int> > ix_list() const{
+    vector< vector<int> > ix_list(){
         vector< vector<int> > v2d;
         vector<int> rowvec; 
         unsigned int r = 0, c = 0;
@@ -574,7 +576,7 @@ private:
         return v2d;
     }
 
-    vector<double> terms_signs() const{
+    vector<double> terms_signs(){
         const double arr[4] = {1., 1., 1., 1.};
         vector<double> signs (arr, arr + sizeof(arr) / sizeof(int));
         return signs;
