@@ -389,11 +389,6 @@ public:
     DerivativeExpSquaredKernel (const long ndim, M* metric)
       : ExpSquaredKernel<M>(ndim, metric){}; 
 
-    virtual double value (const double* x1, const double* x2) {
-        // should combine indices for this 
-        return 0.0;
-    };
-
 protected:
     double X(const double* x1, const double* x2, 
             const int spatial_ix) const{ 
@@ -401,7 +396,7 @@ protected:
             this->get_parameter(spatial_ix);
     }
 
-    vector< vector<int> > get_termB_ixes(){
+    vector< vector<int> > get_termB_ixes() const{
         // I am not sure if it is better to create a vector 
         // or a 2D dynamic array in terms of memory usage.
         // Seems like either way, this method will be called N^2 / 2. times.
@@ -426,7 +421,7 @@ protected:
         return v2d;
     }
 
-    vector< vector<int> > get_termC_ixes(){
+    vector< vector<int> > get_termC_ixes() const{
         unsigned int r, c;
         vector<vector<int> > v2d;
         vector<int> rowvector;
@@ -445,10 +440,10 @@ protected:
         return v2d;
     }
 
-    double termA(const double* x1, const double* x2, vector<int> ix){
+    double termA(const double* x1, const double* x2, vector<int> ix) const {
         double term = 1.;
         for (vector<int>::iterator it=ix.begin(); it != ix.end(); ++it){ 
-            term *= this->X(x1, x2, it);
+            term *= this->X(x1, x2, *it);
         }
         return term;
     }
@@ -467,7 +462,7 @@ protected:
         return this->get_parameter(ix[2]) * this->get_parameter(ix[0]);
     }
 
-    vector< vector<int> > combine_B_ixes(const vector<int> B_ix){
+    vector< vector<int> > combine_B_ixes(const vector<int> B_ix) const{
         // @param B_ix contain the kernel indices, a list of 4 integers 
         vector< vector<int> > ix = this->get_termB_ixes();
         unsigned int rows = ix.size(), cols = ix[0].size();
@@ -485,7 +480,7 @@ protected:
         return termB_ixes;
     }
 
-    vector< vector<int> > combine_C_ixes(const vector<int> C_ix){
+    vector< vector<int> > combine_C_ixes(const vector<int> C_ix) const{
         // @param C_ix contain the kernel indices 
         vector< vector<int> > ix = this->get_termC_ixes();
         unsigned int rows = ix.size(), cols = ix[0].size();
@@ -504,7 +499,7 @@ protected:
     }
 
     double Sigma4thDeriv(const vector<int> ix, const double* x1, 
-            const double* x2){
+            const double* x2) const{
         // if we do decide to separate beta from the metric 
         double allTermBs = 0.;
         double allTermCs = 0.;
@@ -517,12 +512,12 @@ protected:
 
         for (vector< vector<int> >::iterator row_it = combine_B_ixes.begin();
            row_it < combine_B_ixes.end(); ++row_it ){
-           allTermBs *= termB(x1, x2, row_it); 
+           allTermBs *= termB(x1, x2, *row_it); 
         }
         
         for (vector< vector<int> >::iterator row_it = combine_C_ixes.begin();
            row_it < combine_C_ixes.end(); ++row_it ){
-           allTermCs *= termC(x1, x2, row_it); 
+           allTermCs *= termC(*row_it); 
         }
 
         double termA = this->termA(x1, x2, ix);
@@ -533,39 +528,18 @@ protected:
     }
 
 
-    /*double compute_Sigma4deriv_matrix(double* x1, double* x2, 
-                                      vector<int> ix, M* metric){
+    double compute_Sigma4deriv_matrix(const double* x1,const double* x2, 
+                                      const vector< vector<int> > ix, 
+                                      const vector<double> signs) const{
+        double term = 0;
+        unsigned int r;
+        int rows = ix.size();  // this should be 4 
 
-        return 0;
-    }*/
-};
-
-template <typename M>
-class DerivProduct : public Product{
-public:
-    DerivProduct (const unsigned int ndim, Kernel* k1, 
-            DerivativeExpSquaredKernel<M>* k2)
-        : Product(ndim, k1, k2) {};
-
-    double value (const double* x1, const double* x2) const {
-        // potential bug for how we get metric this way
-        double metric = this->get_parameter(0);
-        return this->kernel1_->value(x1, x2) * this->kernel2_->value(x1, x2) * 
-            this->kernel2_->Sigma4thDeriv(x1, x2, metric);
-    };
-
-    void gradient (const double* x1, const double* x2, double* grad) const {
-        unsigned int i, n1 = this->kernel1_->size(), n2 = this->size();
-
-        this->kernel1_->gradient(x1, x2, grad);
-        this->kernel2_->gradient(x1, x2, &(grad[n1]));
-
-        double k1 = this->kernel1_->value(x1, x2),
-               k2 = this->kernel2_->value(x1, x2);
-        for (i = 0; i < n1; ++i) grad[i] *= k2;
-        for (i = n1; i < n2; ++i) grad[i] *= k1;
-    };
-
+        for (r = 0; r < rows; r++){
+            term += signs[r] * this->Sigma4thDeriv(ix[r], x1, x2);
+        }
+        return term;
+    } 
 };
 
 template <typename M>
@@ -575,11 +549,14 @@ public:
       : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
     
     double value (const double* x1, const double* x2) const {
-        return exp(-0.5 * this->get_squared_distance(x1, x2)); // * this -> lambda(x1, x2);
+        const vector< vector<int> > ix_list = this->ix_list();
+        vector<double> signs = this->terms_signs();
+        return exp(-0.5 * this->get_squared_distance(x1, x2)) 
+            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs); 
     };
 
 private:
-    vector< vector<int> > ix_list(){
+    vector< vector<int> > ix_list() const{
         vector< vector<int> > v2d;
         vector<int> rowvec; 
         unsigned int r = 0, c = 0;
@@ -597,7 +574,7 @@ private:
         return v2d;
     }
 
-    vector<double> terms_signs(){
+    vector<double> terms_signs() const{
         const double arr[4] = {1., 1., 1., 1.};
         vector<double> signs (arr, arr + sizeof(arr) / sizeof(int));
         return signs;
@@ -605,10 +582,10 @@ private:
 };
 
 template <typename M>
-class KappaGamma1ExpSquaredKernel : public ExpSquaredKernel<M>{
+class KappaGamma1ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public: 
     KappaGamma1ExpSquaredKernel (const long ndim, M* metric)
-      : ExpSquaredKernel<M>(ndim, metric){}; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
 }; 
 
 template <typename M>
