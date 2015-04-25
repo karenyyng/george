@@ -89,7 +89,206 @@ cdef extern from "kernels.h" namespace "george::kernels":
 
     # Custom Cpp kernels for derivatives.
     cdef cppclass DerivativeExpSquaredKernel[M](ExpSquaredKernel):
-        KappaKappaExpSquaredKernel(const unsigned int ndim, M* metric)
+        DerivativeExpSquaredKernel(const unsigned int ndim, M* metric)
+
+        # cdef np.ndarray __pairsOfBIndices__
+        # cdef np.ndarray __pairsOfCIndices__
+
+        # @cython.boundscheck(False)
+        # def __cinit__(self):
+        #     self.__pairsOfBIndices__ = \
+        #         np.array([[0, 1, 2, 3], [0, 2, 1, 3], [0, 3, 1, 2],
+        #                 [2, 3, 0, 1], [1, 3, 0, 2], [1, 2, 0, 3]],
+        #                 dtype=DTYPE_int)
+
+        #     self.__pairsOfCIndices__ = \
+        #         np.array([[0, 1, 2, 3], [0, 2, 1, 3], [0, 3, 1, 2]],
+        #                 dtype=DTYPE_int)
+
+        # def __X__(self, np.ndarray[DTYPE_t, ndim=2] coords,
+        #         unsigned int m, unsigned int n, unsigned int spat_ix):
+        #     return coords[m, spat_ix] - coords[n, spat_ix]
+
+        # def __termA__(self, np.ndarray[DTYPE_t, ndim=2] coords,
+        #             np.ndarray[DTYPE_int_t, ndim=1] ix,
+        #             unsigned int m, unsigned int n,
+        #             bool_t debug=False):
+        #     """
+        #     # the constructor also needs the coordinates
+        #     Compute term 1 in equation (24) without leading factors of $\beta^4$
+
+        #     :params coords: numpy array,
+        #         shape is (obs_no, 2) where 2 denotes the 2 spatial dimensions
+
+        #     :params ix: np array of 4 integers,
+        #         denote the spatial subscripts for the ker deriv
+
+        #     :beta: float,
+        #         inverse length
+
+        #     .. math:
+        #         X_i X_j X_h X_k
+        #     """
+        #     cdef double term = 1.
+
+        #     if debug:
+        #         print "---------------------------------"
+        #     for i in ix:
+        #         if debug:
+        #             print "parts of term A = {0}".format(term)
+        #         term *= self.__X__(coords, m, n, i)
+
+        #     if debug:
+        #         print "m = {0}, n = {1}".format(m, n)
+        #         print "indices of term A ix = {0}".format(ix)
+        #         print "term A = {0}".format(term)
+        #         print "---------------------------------"
+
+        #     return term
+
+        # def __termB__(self, np.ndarray[DTYPE_t, ndim=2] coords,
+        #             np.ndarray[DTYPE_int_t, ndim=1] ix,
+        #             unsigned int m, unsigned int n,
+        #             np.ndarray[DTYPE_t, ndim=1] metric, debug=False):
+        #     """
+        #     Compute term 2 in equation (24) without leading factors of $\beta^3$
+
+        #     :param coords: numpy array,
+        #         shape is (obs_no, 2) where 2 denotes the 2 spatial dimensions
+
+        #     :param ix: list of 4 integers,
+        #         denote the spatial subscripts for the ker deriv,
+        #         assumes to take the form [a, b, c, d]
+
+        #     :param m: integer
+        #         denote the row index of covariance matrix, or obs_no
+
+        #     :params n: integer
+        #         denote the col index of covariance matrix, or obs_no
+
+        #     :param metric: list of floats
+        #         should be of dimension 2, we assume diagonal metric here
+
+        #     .. math:
+        #         X_a X_b D_{cd} \delta_{cd}
+        #     """
+        #     if debug is True:
+        #         print "---------------------------------"
+        #         print "m = {0}, n = {1}".format(m, n)
+        #         print "indices of term B = {0}".format(ix)
+        #         print "termB = {0}".format(self.__X__(coords, m, n, ix[0]) *
+        #         self.__X__(coords, m, n, ix[1]) *
+        #         metric[ix[2]])
+
+        #     if ix[2] != ix[3]:
+        #         return 0
+
+        #     return self.__X__(coords, m, n, ix[0]) * \
+        #         self.__X__(coords, m, n, ix[1]) * \
+        #         metric[ix[2]]
+
+
+        # def __termC__(self, np.ndarray[DTYPE_t, ndim=2] coords,
+        #               np.ndarray[DTYPE_int_t, ndim=1] ix,
+        #               np.ndarray[DTYPE_t, ndim=1] metric,
+        #               bool_t debug=False):
+        #     """
+        #     Compute term 3 in equation (24) without leading factor of $\beta^2$
+
+        #     :param coords: numpy array,
+        #         shape is (obs_no, 2) where 2 denotes the 2 spatial dimensions
+
+        #     :param ix: list of 4 integers,
+        #         denote the spatial subscripts for the ker deriv,
+        #         assumes to take the form [a, b, c, d]
+
+        #     :param metric: array of floats
+
+        #     .. math:
+        #         D_{ab} D_{cd} \delta_{ab} \delta_{cd}
+        #     """
+        #     if debug:
+        #         print "---------------------------------"
+        #         print "indices of term C = {0}".format(ix)
+        #         print "term C = {0}".format(metric[ix[2]] * metric[ix[0]])
+
+        #     if ix[0] != ix[1]:
+        #         return 0
+
+        #     if ix[2] != ix[3]:
+        #         return 0
+
+        #     return metric[ix[2]] * metric[ix[0]]
+
+        # def __Sigma4thDeriv__(self, double beta,
+        #                     np.ndarray[DTYPE_t, ndim=2] coords,
+        #                     np.ndarray[DTYPE_int_t, ndim=1] ix,
+        #                     unsigned int m, unsigned int n,
+        #                     np.ndarray[DTYPE_t, ndim=1] metric,
+        #                     bool_t debug=False):
+        #     """
+        #     Gather the 10 terms for the 4th derivative of each Sigma
+        #     given the ix for each the derivatives are taken w.r.t.
+
+        #     :params corr: float
+        #         value of the correlation parameter in the ExpSquaredKernel
+
+        #     :params coords: 2D numpy array
+        #         with shape (nObs, ndim)
+
+        #     :params ix: list of 4 integers
+        #     """
+        #     allTermBs = 0
+        #     combBix = \
+        #         np.array([[ix[i] for i in self.__pairsOfBIndices__[j]]
+        #                 for j in range(6)])
+
+        #     # combBix is the subscript indices combination for B terms
+        #     for i in range(6):
+        #         allTermBs += self.__termB__(coords, combBix[i], m, n, metric)
+
+        #     allTermCs = 0
+        #     combCix = \
+        #         np.array([[ix[i] for i in self.__pairsOfCIndices__[j]]
+        #                 for j in range(3)])
+
+        #     for i in range(3):
+        #         allTermCs += self.__termC__(coords, combCix[i], metric)
+
+        #     termA = self.__termA__(coords, ix, m, n)
+
+        #     if debug:
+        #         print "---------------------------------"
+        #         print "m = {0}, n = {1}".format(m, n)
+        #         print "combBix is ", combBix
+        #         print "combCix is ", combCix
+        #         print "combined terms A, B, C are \n" + \
+        #         " {0}, {1}, {2}".format(termA, allTermBs, allTermCs)
+
+        #     return (beta ** 4. * termA -
+        #             beta ** 3. * allTermBs +
+        #             beta ** 2. * allTermCs) / 4.
+
+        # def __compute_Sigma4derv_matrix__(self, np.ndarray[DTYPE_t, ndim=2] x,
+        #                                 double pars,
+        #                                 np.ndarray[DTYPE_int_t, ndim=1] ix,
+        #                                 np.ndarray[DTYPE_t, ndim=1] metric):
+        #     """
+        #     Compute the coefficients due to the derivatives - this
+        #     should result in a symmetric N x N matrix where N is the
+        #     number of observations
+
+        #     :params par: theta_2^2 according to George parametrization
+        #     :params ix: list or array
+        #         of 4 integers to indicate derivative subscripts
+        #     """
+        #     # should add a check to make sure that pars is a float not a list
+
+        #     return [[self.__Sigma4thDeriv__(pars, x, ix, m, n, metric,
+        #                                     debug=False)
+        #             for m in range(x.shape[0])]
+        #             for n in range(x.shape[0])
+        #             ]
 
     cdef cppclass KappaKappaExpSquaredKernel[M](ExpSquaredKernel):
         KappaKappaExpSquaredKernel(const unsigned int ndim, M* metric)
@@ -108,6 +307,8 @@ cdef extern from "kernels.h" namespace "george::kernels":
 
     cdef cppclass Gamma2Gamma2ExpSquaredKernel[M](ExpSquaredKernel):
         Gamma2Gamma2ExpSquaredKernel(const unsigned int ndim, M* metric)
+
+
 
 cdef inline double eval_python_kernel (const double* pars,
                                        const unsigned int size, void* meta,

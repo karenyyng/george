@@ -11,6 +11,8 @@ using std::vector;
 namespace george {
 namespace kernels {
 
+
+
 class Kernel {
 public:
     Kernel (const unsigned int ndim) : ndim_(ndim) {};
@@ -308,6 +310,7 @@ public:
     ExpSquaredKernel (const long ndim, M* metric)
         : RadialKernel<M>(ndim, metric) {};
     double value (const double* x1, const double* x2) const {
+        printf("Inside ExpSquared original value method\n");
         return exp(-0.5 * this->get_squared_distance(x1, x2));
     };
     double get_radial_gradient (double r2) const {
@@ -389,11 +392,13 @@ public:
     DerivativeExpSquaredKernel (const long ndim, M* metric)
       : ExpSquaredKernel<M>(ndim, metric){}; 
 
+                            
 protected:
+    static const int ix_rows = 6, ix_cols = 4;
     double X(const double* x1, const double* x2, 
             const int spatial_ix){ 
         return (x1[spatial_ix] - x2[spatial_ix]) * 
-            this->get_parameter(spatial_ix);
+            this->metric_->get_parameter(spatial_ix);
     }
 
     vector< vector<int> > get_termB_ixes(){
@@ -445,7 +450,7 @@ protected:
         for (vector<int>::iterator it=ix.begin(); it != ix.end(); ++it){ 
             term *= this->X(x1, x2, *it);
         }
-        std::cout << term << std::endl;
+        printf ("%.2f\n", term);
         return term;
     }
 
@@ -453,6 +458,7 @@ protected:
                  const vector<int> ix) {
         if (ix[2] != ix[3]) { return 0; }
 
+        printf("Metric is %.2f\n", this->metric_->get_parameter(ix[2])); 
         return this->X(x1, x2, ix[0]) * this->X(x1, x2, ix[1]) * 
             this->get_parameter(ix[2]);
     }
@@ -460,10 +466,11 @@ protected:
     double termC(const vector<int> ix) {
         if (ix[0] != ix[1]) { return 0; } 
         if (ix[2] != ix[3]) { return 0; }
-        return this->get_parameter(ix[2]) * this->get_parameter(ix[0]);
+        return this->metric_->get_parameter(ix[2]) * 
+            this->metric_->get_parameter(ix[0]);
     }
 
-    vector< vector<int> > combine_B_ixes(const vector<int> B_ix){
+    vector< vector<int> > combine_B_ixes(const vector<int> kernel_B_ix){
         // @param B_ix contain the kernel indices, a list of 4 integers 
         vector< vector<int> > ix = this->get_termB_ixes();
         unsigned int rows = ix.size(), cols = ix[0].size();
@@ -474,14 +481,14 @@ protected:
         for (r = 0; r < rows; r++){
             temp_row.clear();
             for (c = 0; c < cols; c++){
-                temp_row.push_back(B_ix[ix[r][c]]);
+                temp_row.push_back(kernel_B_ix[ix[r][c]]);
             }
             termB_ixes.push_back(temp_row);
         }
         return termB_ixes;
     }
 
-    vector< vector<int> > combine_C_ixes(const vector<int> C_ix){
+    vector< vector<int> > combine_C_ixes(const vector<int> kernel_C_ix){
         // @param C_ix contain the kernel indices 
         vector< vector<int> > ix = this->get_termC_ixes();
         unsigned int rows = ix.size(), cols = ix[0].size();
@@ -492,7 +499,7 @@ protected:
         for (r = 0; r < rows; r++){
             temp_row.clear();
             for (c = 0; c < cols; c++){
-                temp_row.push_back(C_ix[ix[r][c]]);
+                temp_row.push_back(kernel_C_ix[ix[r][c]]);
             }
             termC_ixes.push_back(temp_row);
         }
@@ -550,8 +557,10 @@ public:
       : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
     
     double value (const double* x1, const double* x2) {
-        std::cout << "Inside modified value method" << std::endl;
+        printf("Inside KappaKappa modified value method\n");
         const vector< vector<int> > ix_list = this->ix_list();
+
+
         vector<double> signs = this->terms_signs();
         return exp(-0.5 * this->get_squared_distance(x1, x2)) 
             * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs); 

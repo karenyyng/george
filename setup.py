@@ -142,7 +142,7 @@ if __name__ == "__main__":
                          libraries=libraries, include_dirs=include_dirs)
     hodlr_ext = Extension("george.hodlr", sources=[hodlr_fn],
                           libraries=libraries, include_dirs=include_dirs)
-    extensions = cythonize([kern_ext, hodlr_ext])
+    extensions = cythonize([kern_ext, hodlr_ext], gdb_debug=True)
 
     # Hackishly inject a constant into builtins to enable importing of the
     # package before the library is built.
