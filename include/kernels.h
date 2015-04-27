@@ -34,7 +34,12 @@ public:
     virtual unsigned int size () const { return 0; }
     virtual void set_vector (const double* vector) {
         int i, n = this->size();
-        for (i = 0; i < n; ++i) this->set_parameter(i, vector[i]);
+        for (i = 0; i < n; ++i) {
+            this->set_parameter(i, vector[i]);
+
+            printf ("set_vector is called to set vector[%d] = %.2f\n", 
+                i, vector[i]);
+        }
     };
     virtual void set_parameter (const unsigned int i, const double value) {};
     virtual double get_parameter (const unsigned int i) const { return 0.0; };
@@ -407,6 +412,12 @@ protected:
     static const int ix_rows = 6, ix_cols = 4;
     double X(const double* x1, const double* x2, 
             const int spatial_ix){ 
+        printf ("Inside X: \n");
+        printf ("x1[spatial_ix] = %2f\n", x1[spatial_ix]);
+        printf ("x2[spatial_ix] = %2f\n", x2[spatial_ix]);
+        printf ("this->metric_->get_parameter(spatial_ix) = %2f\n", 
+                this->metric_->get_parameter(spatial_ix));
+        printf("spatial_ix = %d\n", spatial_ix);
         return (x1[spatial_ix] - x2[spatial_ix]) * 
             this->metric_->get_parameter(spatial_ix);
     }
@@ -468,6 +479,8 @@ protected:
                  const vector<int> ix) {
         if (ix[2] != ix[3]) { return 0; }
 
+        printf ("termB: ix[1] = %d\n", ix[1]);
+        printf ("termB: ix[0] = %d\n", ix[0]);
         printf ("termB = %.2f\n", this->X(x1, x2, ix[0]) * 
                 this->X(x1, x2, ix[1] * this->get_parameter(ix[2])));
         return this->X(x1, x2, ix[0]) * this->X(x1, x2, ix[1]) * 
