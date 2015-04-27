@@ -51,6 +51,7 @@ cdef class CythonKernel:
         cdef unsigned int i, j, delta = x.strides[0]
         cdef np.ndarray[DTYPE_t, ndim=2] k = np.empty((n, n), dtype=DTYPE)
         for i in range(n):
+            print "calling value method in _pyx file"
             k[i, i] = self.kernel.value(<double*>(x.data + i*delta),
                                         <double*>(x.data + i*delta))
             for j in range(i + 1, n):

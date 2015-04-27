@@ -17,7 +17,8 @@ class Kernel {
 public:
     Kernel (const unsigned int ndim) : ndim_(ndim) {};
     virtual ~Kernel () {};
-    virtual double value (const double* x1, const double* x2) const {
+    virtual double value (const double* x1, const double* x2) {
+        printf ("calling Kernel.value !!! WRONG INHERITANCE\n");
         return 0.0;
     };
     virtual void gradient (const double* x1, const double* x2, double* grad) const {
@@ -63,7 +64,7 @@ public:
     };
 
     // Call the external functions.
-    double value (const double* x1, const double* x2) const {
+    virtual double value (const double* x1, const double* x2) {
         return f_(parameters_, size_, meta_, x1, x2, this->get_ndim());
     };
     void gradient (const double* x1, const double* x2, double* grad) const {
@@ -133,7 +134,7 @@ public:
     Sum (const unsigned int ndim, Kernel* k1, Kernel* k2)
         : Operator(ndim, k1, k2) {};
 
-    double value (const double* x1, const double* x2) const {
+    double value (const double* x1, const double* x2) {
         return this->kernel1_->value(x1, x2) + this->kernel2_->value(x1, x2);
     };
 
@@ -148,8 +149,9 @@ class Product : public Operator {
 public:
     Product (const unsigned int ndim, Kernel* k1, Kernel* k2)
         : Operator(ndim, k1, k2) {};
-
-    double value (const double* x1, const double* x2) const {
+    
+    using Kernel::value;
+    virtual double value (const double* x1, const double* x2) {
         return this->kernel1_->value(x1, x2) * this->kernel2_->value(x1, x2);
     };
 
@@ -176,7 +178,7 @@ public:
     ConstantKernel (const unsigned int ndim, const double value)
         : Kernel(ndim), value_(value) {};
 
-    double value (const double* x1, const double* x2) const {
+    double value (const double* x1, const double* x2) {
         return value_;
     };
     void gradient (const double* x1, const double* x2, double* grad) const {
@@ -208,7 +210,7 @@ public:
         return 0.0;
     };
 
-    double value (const double* x1, const double* x2) const {
+    double value (const double* x1, const double* x2) {
         return value_ * _switch(x1, x2);
     };
 
@@ -230,7 +232,7 @@ class DotProductKernel : public Kernel {
 public:
     DotProductKernel (const unsigned int ndim) : Kernel(ndim) {};
 
-    double value (const double* x1, const double* x2) const {
+    virtual double value (const double* x1, const double* x2) {
         unsigned int i, ndim = this->get_ndim();
         double val = 0.0;
         for (i = 0; i < ndim; ++i) val += x1[i] * x2[i];
@@ -293,7 +295,7 @@ template <typename M>
 class ExpKernel : public RadialKernel<M> {
 public:
     ExpKernel (const long ndim, M* metric) : RadialKernel<M>(ndim, metric) {};
-    double value (const double* x1, const double* x2) const {
+    virtual double value (const double* x1, const double* x2) {
         return exp(-sqrt(this->get_squared_distance(x1, x2)));
     };
     double get_radial_gradient (double r2) const {
@@ -309,7 +311,9 @@ class ExpSquaredKernel : public RadialKernel<M> {
 public:
     ExpSquaredKernel (const long ndim, M* metric)
         : RadialKernel<M>(ndim, metric) {};
-    double value (const double* x1, const double* x2) const {
+
+    using Kernel::value;
+    virtual double value (const double* x1, const double* x2) {
         printf("Inside ExpSquared original value method\n");
         return exp(-0.5 * this->get_squared_distance(x1, x2));
     };
@@ -323,7 +327,7 @@ class Matern32Kernel : public RadialKernel<M> {
 public:
     Matern32Kernel (const long ndim, M* metric)
         : RadialKernel<M>(ndim, metric) {};
-    double value (const double* x1, const double* x2) const {
+    double value (const double* x1, const double* x2) {
         double r = sqrt(3 * this->get_squared_distance(x1, x2));
         return (1 + r) * exp(-r);
     };
@@ -338,7 +342,7 @@ class Matern52Kernel : public RadialKernel<M> {
 public:
     Matern52Kernel (const long ndim, M* metric)
         : RadialKernel<M>(ndim, metric) {};
-    double value (const double* x1, const double* x2) const {
+    double value (const double* x1, const double* x2) {
         double r2 = 5 * this->get_squared_distance(x1, x2),
                r = sqrt(r2);
         return (1 + r + r2 / 3.0) * exp(-r);
@@ -355,7 +359,7 @@ public:
     RationalQuadraticKernel (const long ndim, M* metric)
         : RadialKernel<M>(ndim, metric) {};
 
-    double value (const double* x1, const double* x2) const {
+    virtual double value (const double* x1, const double* x2) {
         double r2 = this->get_squared_distance(x1, x2);
         return pow(1 + 0.5 * r2 / alpha_, -alpha_);
     };
@@ -391,6 +395,12 @@ public:
     // x1 is supposed to be the coordinates 
     DerivativeExpSquaredKernel (const long ndim, M* metric)
       : ExpSquaredKernel<M>(ndim, metric){}; 
+
+    using Kernel::value;
+    virtual double value (const double* x1, const double* x2) {
+        printf ("inside DerivativeExpSquaredKernel which shouldn't be called");
+        return 0.;
+    }
 
                             
 protected:
@@ -450,7 +460,7 @@ protected:
         for (vector<int>::iterator it=ix.begin(); it != ix.end(); ++it){ 
             term *= this->X(x1, x2, *it);
         }
-        printf ("%.2f\n", term);
+        printf ("termA = %.2f\n", term);
         return term;
     }
 
@@ -458,14 +468,21 @@ protected:
                  const vector<int> ix) {
         if (ix[2] != ix[3]) { return 0; }
 
-        printf("Metric is %.2f\n", this->metric_->get_parameter(ix[2])); 
+        printf ("termB = %.2f\n", this->X(x1, x2, ix[0]) * 
+                this->X(x1, x2, ix[1] * this->get_parameter(ix[2])));
         return this->X(x1, x2, ix[0]) * this->X(x1, x2, ix[1]) * 
-            this->get_parameter(ix[2]);
+            this->metric_->get_parameter(ix[2]);
     }
 
     double termC(const vector<int> ix) {
         if (ix[0] != ix[1]) { return 0; } 
         if (ix[2] != ix[3]) { return 0; }
+        printf ("termC: ix[2] = %2d\n", ix[2]);
+        printf ("termC: this->metric_->get_parameter(ix[2]) = %.2f\n", 
+                this->metric_->get_parameter(ix[2]));
+        printf ("termC: ix[0] = %2d\n", ix[0]);
+        printf ("termC: this->metric_->get_parameter(ix[0]) = %.2f\n", 
+                this->metric_->get_parameter(ix[0]));
         return this->metric_->get_parameter(ix[2]) * 
             this->metric_->get_parameter(ix[0]);
     }
@@ -520,16 +537,18 @@ protected:
 
         for (vector< vector<int> >::iterator row_it = combine_B_ixes.begin();
            row_it < combine_B_ixes.end(); ++row_it ){
-           allTermBs *= termB(x1, x2, *row_it); 
+           allTermBs += termB(x1, x2, *row_it); 
         }
         
         for (vector< vector<int> >::iterator row_it = combine_C_ixes.begin();
            row_it < combine_C_ixes.end(); ++row_it ){
-           allTermCs *= termC(*row_it); 
+           allTermCs += termC(*row_it); 
         }
 
         double termA = this->termA(x1, x2, ix);
 
+        printf ("combined terms in Sigma4thDeriv = %.2f \n", 
+                (termA - allTermBs + allTermCs) / 4.);
         // beta = metric currently and are multipled within the functions
         // for getting each term  so we don't have to multiply beta again.
         return (termA - allTermBs + allTermCs) / 4.;
@@ -554,12 +573,14 @@ template <typename M>
 class KappaKappaExpSquaredKernel: public DerivativeExpSquaredKernel<M>{
 public: 
     KappaKappaExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
-    
-    double value (const double* x1, const double* x2) {
+      : DerivativeExpSquaredKernel<M>(ndim, metric){
+          printf("constructing KappaKappaExpSquaredKernel\n");
+      }; 
+
+    using Kernel::value;
+    virtual double value (const double* x1, const double* x2) {
         printf("Inside KappaKappa modified value method\n");
         const vector< vector<int> > ix_list = this->ix_list();
-
 
         vector<double> signs = this->terms_signs();
         return exp(-0.5 * this->get_squared_distance(x1, x2)) 
@@ -642,7 +663,7 @@ public:
     CosineKernel (const unsigned int ndim, const unsigned int dim)
         : Kernel(ndim), dim_(dim) {};
 
-    double value (const double* x1, const double* x2) const {
+    double value (const double* x1, const double* x2) {
         return cos(2 * M_PI * (x1[dim_] - x2[dim_]) / period_);
     };
     void gradient (const double* x1, const double* x2, double* grad) const {
@@ -666,7 +687,7 @@ public:
     ExpSine2Kernel (const unsigned int ndim, const unsigned int dim)
         : Kernel(ndim), dim_(dim) {};
 
-    double value (const double* x1, const double* x2) const {
+    double value (const double* x1, const double* x2) {
         double s = sin(M_PI * (x1[dim_] - x2[dim_]) / period_);
         return exp(-gamma_ * s * s);
     };
