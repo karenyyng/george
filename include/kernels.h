@@ -18,7 +18,7 @@ public:
     Kernel (const unsigned int ndim) : ndim_(ndim) {};
     virtual ~Kernel () {};
     virtual double value (const double* x1, const double* x2) {
-        printf ("calling Kernel.value !!! WRONG INHERITANCE\n");
+        // printf ("calling Kernel.value !!! WRONG INHERITANCE\n");
         return 0.0;
     };
     virtual void gradient (const double* x1, const double* x2, double* grad) const {
@@ -37,8 +37,8 @@ public:
         for (i = 0; i < n; ++i) {
             this->set_parameter(i, vector[i]);
 
-            printf ("set_vector is called to set vector[%d] = %.2f\n", 
-                i, vector[i]);
+            // printf ("set_vector is called to set vector[%d] = %.2f\n", 
+            // i, vector[i]);
         }
     };
     virtual void set_parameter (const unsigned int i, const double value) {};
@@ -319,7 +319,7 @@ public:
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        printf("Inside ExpSquared original value method\n");
+        // printf("Inside ExpSquared original value method\n");
         return exp(-0.5 * this->get_squared_distance(x1, x2));
     };
     double get_radial_gradient (double r2) const {
@@ -403,7 +403,7 @@ public:
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        printf ("Inside DerivativeExpSquaredKernel which shouldn't be called\n");
+        // printf ("Inside DerivativeExpSquaredKernel which shouldn't be called\n");
         return 0.;
     }
 
@@ -412,12 +412,12 @@ protected:
     static const int ix_rows = 6, ix_cols = 4;
     double X(const double* x1, const double* x2, 
             const int spatial_ix){ 
-        printf ("Inside X: \n");
-        printf ("x1[spatial_ix] = %2f\n", x1[spatial_ix]);
-        printf ("x2[spatial_ix] = %2f\n", x2[spatial_ix]);
-        printf ("this->metric_->get_parameter(spatial_ix) = %2f\n", 
-                this->metric_->get_parameter(spatial_ix));
-        printf("spatial_ix = %d\n", spatial_ix);
+        // printf ("Inside X: \n");
+        // printf ("x1[spatial_ix] = %2f\n", x1[spatial_ix]);
+        // printf ("x2[spatial_ix] = %2f\n", x2[spatial_ix]);
+        // printf ("this->metric_->get_parameter(spatial_ix) = %2f\n", 
+        //         this->metric_->get_parameter(spatial_ix));
+        // printf("spatial_ix = %d\n", spatial_ix);
         return (x1[spatial_ix] - x2[spatial_ix]) * 
             this->metric_->get_parameter(spatial_ix);
     }
@@ -471,7 +471,7 @@ protected:
         for (vector<int>::iterator it=ix.begin(); it != ix.end(); ++it){ 
             term *= this->X(x1, x2, *it);
         }
-        printf ("termA = %.2f\n", term);
+        // printf ("termA = %.2f\n", term);
         return term;
     }
 
@@ -479,10 +479,10 @@ protected:
                  const vector<int> ix) {
         if (ix[2] != ix[3]) { return 0; }
 
-        printf ("termB: ix[1] = %d\n", ix[1]);
-        printf ("termB: ix[0] = %d\n", ix[0]);
-        printf ("termB = %.2f\n", this->X(x1, x2, ix[0]) * 
-                this->X(x1, x2, ix[1] * this->get_parameter(ix[2])));
+        // printf ("termB: ix[1] = %d\n", ix[1]);
+        // printf ("termB: ix[0] = %d\n", ix[0]);
+        // printf ("termB = %.2f\n", this->X(x1, x2, ix[0]) * 
+        //         this->X(x1, x2, ix[1] * this->get_parameter(ix[2])));
         return this->X(x1, x2, ix[0]) * this->X(x1, x2, ix[1]) * 
             this->metric_->get_parameter(ix[2]);
     }
@@ -490,12 +490,12 @@ protected:
     double termC(const vector<int> ix) {
         if (ix[0] != ix[1]) { return 0; } 
         if (ix[2] != ix[3]) { return 0; }
-        printf ("termC: ix[2] = %2d\n", ix[2]);
-        printf ("termC: this->metric_->get_parameter(ix[2]) = %.2f\n", 
-                this->metric_->get_parameter(ix[2]));
-        printf ("termC: ix[0] = %2d\n", ix[0]);
-        printf ("termC: this->metric_->get_parameter(ix[0]) = %.2f\n", 
-                this->metric_->get_parameter(ix[0]));
+        // printf ("termC: ix[2] = %2d\n", ix[2]);
+        // printf ("termC: this->metric_->get_parameter(ix[2]) = %.2f\n", 
+        //         this->metric_->get_parameter(ix[2]));
+        // printf ("termC: ix[0] = %2d\n", ix[0]);
+        // printf ("termC: this->metric_->get_parameter(ix[0]) = %.2f\n", 
+        //         this->metric_->get_parameter(ix[0]));
         return this->metric_->get_parameter(ix[2]) * 
             this->metric_->get_parameter(ix[0]);
     }
@@ -560,8 +560,8 @@ protected:
 
         double termA = this->termA(x1, x2, ix);
 
-        printf ("combined terms in Sigma4thDeriv = %.2f \n", 
-                (termA - allTermBs + allTermCs) / 4.);
+        // printf ("combined terms in Sigma4thDeriv = %.2f \n", 
+        //        (termA - allTermBs + allTermCs) / 4.);
         // beta = metric currently and are multipled within the functions
         // for getting each term  so we don't have to multiply beta again.
         return (termA - allTermBs + allTermCs) / 4.;
@@ -587,12 +587,12 @@ class KappaKappaExpSquaredKernel: public DerivativeExpSquaredKernel<M>{
 public: 
     KappaKappaExpSquaredKernel (const long ndim, M* metric)
       : DerivativeExpSquaredKernel<M>(ndim, metric){
-          printf("constructing KappaKappaExpSquaredKernel\n");
+          // printf("constructing KappaKappaExpSquaredKernel\n");
       }; 
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        printf("Inside KappaKappa modified value method\n");
+        // printf("Inside KappaKappa modified value method\n");
         const vector< vector<int> > ix_list = this->ix_list();
 
         vector<double> signs = this->terms_signs();
@@ -634,7 +634,7 @@ public:
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        printf("Inside KappaGamma1 modified value method\n");
+        // printf("Inside KappaGamma1 modified value method\n");
         const vector< vector<int> > ix_list = this->ix_list();
 
         vector<double> signs = this->terms_signs();
@@ -676,7 +676,7 @@ public:
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        printf("Inside KappaGamma2 modified value method\n");
+        // printf("Inside KappaGamma2 modified value method\n");
         const vector< vector<int> > ix_list = this->ix_list();
 
         vector<double> signs = this->terms_signs();
@@ -720,7 +720,7 @@ public:
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        printf("Inside Gamma1Gamma1 modified value method\n");
+        // printf("Inside Gamma1Gamma1 modified value method\n");
         const vector< vector<int> > ix_list = this->ix_list();
 
         vector<double> signs = this->terms_signs();
@@ -762,7 +762,7 @@ public:
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        printf("Inside Gamma1Gamma2 modified value method\n");
+        // printf("Inside Gamma1Gamma2 modified value method\n");
         const vector< vector<int> > ix_list = this->ix_list();
 
         vector<double> signs = this->terms_signs();
@@ -807,7 +807,7 @@ public:
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        printf("Inside Gamma2Gamma2 modified value method\n");
+        // printf("Inside Gamma2Gamma2 modified value method\n");
         const vector< vector<int> > ix_list = this->ix_list();
 
         vector<double> signs = this->terms_signs();
