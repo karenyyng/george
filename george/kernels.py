@@ -527,41 +527,6 @@ class KappaKappaExpSquaredKernel(ExpSquaredKernel):
     """
     kernel_type = 10
 
-    # def __init__(self, *pars, **kwargs):
-    #     super(ExpSquaredKernel, self).__init__(*pars, **kwargs)
-
-    #     # python arrays are zeroth indexed
-    #     self.__ix_list__ = np.array([[1, 1, 1, 1],
-    #                                  [1, 1, 2, 2],
-    #                                  [2, 2, 1, 1],
-    #                                  [2, 2, 2, 2]]) - 1
-
-    #     self.__terms_signs__ = np.array([1, 1, 1, 1])
-
-    # @property
-    # def kernel(self):
-    #     if self.dirty or self._kernel is None:
-    #         # this is where the Cython code is called
-    #         self._kernel = CythonDerivKernel(self)
-    #         self.dirty = False
-    #     return self._kernel
-
-    # def value(self, x1, x2=None):
-    #     x1 = np.ascontiguousarray(x1, dtype=np.float64)
-    #     if x2 is None:
-    #         # we need to pass the values in since the Cython code
-    #         # may not be able to parse Python values from self
-    #         return self.kernel.value_symmetric(x1, self.__ix_list__,
-    #                                            self.pars[-1],
-    #                                            self.__terms_signs__,
-    #                                            np.ones(x1.ndim))
-
-    #     x2 = np.ascontiguousarray(x2, dtype=np.float64)
-    #     return self.kernel.value_general(x1, x2, self.__ix_list,
-    #                                      self.par[-1],
-    #                                      self.__terms_signs__,
-    #                                      np.ones(x1.ndim))
-
 
 class KappaGamma1ExpSquaredKernel(ExpSquaredKernel):
     """
@@ -604,13 +569,6 @@ class Gamma1Gamma1ExpSquaredKernel(ExpSquaredKernel):
     """
     kernel_type = 13
 
-    @property
-    def kernel(self):
-        if self.dirty or self._kernel is None:
-            self._kernel = CythonDerivKernel(self)
-            self.dirty = False
-        return self._kernel
-
 
 class Gamma1Gamma2ExpSquaredKernel(ExpSquaredKernel):
     """
@@ -624,13 +582,6 @@ class Gamma1Gamma2ExpSquaredKernel(ExpSquaredKernel):
         eqn (7) from kern_deriv.pdf
     """
     kernel_type = 14
-
-    @property
-    def kernel(self):
-        if self.dirty or self._kernel is None:
-            self._kernel = CythonDerivKernel(self)
-            self.dirty = False
-        return self._kernel
 
 
 class Gamma2Gamma2ExpSquaredKernel(ExpSquaredKernel):
@@ -646,12 +597,3 @@ class Gamma2Gamma2ExpSquaredKernel(ExpSquaredKernel):
     """
     kernel_type = 15
 
-    @property
-    def kernel(self):
-        if self.dirty or self._kernel is None:
-            self._kernel = CythonDerivKernel(self)
-            self.dirty = False
-        return self._kernel
-
-# and we should specify the other 3 classes which are transpose of the off
-# diagonal cov

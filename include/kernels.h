@@ -403,7 +403,7 @@ public:
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        printf ("inside DerivativeExpSquaredKernel which shouldn't be called");
+        printf ("Inside DerivativeExpSquaredKernel which shouldn't be called\n");
         return 0.;
     }
 
@@ -631,40 +631,214 @@ class KappaGamma1ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public: 
     KappaGamma1ExpSquaredKernel (const long ndim, M* metric)
       : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
+
+    using Kernel::value;
+    virtual double value (const double* x1, const double* x2) {
+        printf("Inside KappaGamma1 modified value method\n");
+        const vector< vector<int> > ix_list = this->ix_list();
+
+        vector<double> signs = this->terms_signs();
+        return exp(-0.5 * this->get_squared_distance(x1, x2)) 
+            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs); 
+    };
+
+private:
+    vector< vector<int> > ix_list(){
+        vector< vector<int> > v2d;
+        vector<int> rowvec; 
+        unsigned int r = 0, c = 0;
+        const int rows = 4, cols = 4;
+        int arr[rows][cols] = {{0, 0, 0, 0},
+                               {0, 0, 1, 1},
+                               {1, 1, 0, 0},
+                               {1, 1, 1, 1}};
+
+        for (r = 0; r < rows; r++){
+            rowvec.clear();
+            for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
+            v2d.push_back(rowvec);
+        }
+        return v2d;
+    }
+
+    vector<double> terms_signs(){
+        const double arr[4] = {1., -1., 1., -1.};
+        vector<double> signs (arr, arr + sizeof(arr) / sizeof(int));
+        return signs;
+    }
 }; 
 
 template <typename M>
-class KappaGamma2ExpSquaredKernel : public ExpSquaredKernel<M>{
+class KappaGamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public: 
     KappaGamma2ExpSquaredKernel (const long ndim, M* metric)
-      : ExpSquaredKernel<M>(ndim, metric){}; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
+
+    using Kernel::value;
+    virtual double value (const double* x1, const double* x2) {
+        printf("Inside KappaGamma2 modified value method\n");
+        const vector< vector<int> > ix_list = this->ix_list();
+
+        vector<double> signs = this->terms_signs();
+        return exp(-0.5 * this->get_squared_distance(x1, x2)) 
+            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs); 
+    };
+
+private:
+    vector< vector<int> > ix_list(){
+        vector< vector<int> > v2d;
+        vector<int> rowvec; 
+        unsigned int r = 0, c = 0;
+        const int rows = 4, cols = 4;
+        int arr[rows][cols] = {{0, 0, 0, 1},
+                               {0, 0, 1, 0},
+                               {1, 1, 0, 1},
+                               {1, 1, 1, 0}};
+
+        for (r = 0; r < rows; r++){
+            rowvec.clear();
+            for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
+            v2d.push_back(rowvec);
+        }
+        return v2d;
+    }
+
+    vector<double> terms_signs(){
+        const double arr[4] = {1., 1., 1., 1.};
+        vector<double> signs (arr, arr + sizeof(arr) / sizeof(int));
+        return signs;
+    }
 }; 
 
 template <typename M>
-class Gamma1Gamma1ExpSquaredKernel : public ExpSquaredKernel<M>{
+class Gamma1Gamma1ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public: 
     // have to figure out if this constructor is correct 
     // x1 is supposed to be the coordinates 
     Gamma1Gamma1ExpSquaredKernel (const long ndim, M* metric)
-      : ExpSquaredKernel<M>(ndim, metric){}; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
+
+    using Kernel::value;
+    virtual double value (const double* x1, const double* x2) {
+        printf("Inside Gamma1Gamma1 modified value method\n");
+        const vector< vector<int> > ix_list = this->ix_list();
+
+        vector<double> signs = this->terms_signs();
+        return exp(-0.5 * this->get_squared_distance(x1, x2)) 
+            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs); 
+    };
+
+private:
+    vector< vector<int> > ix_list(){
+        vector< vector<int> > v2d;
+        vector<int> rowvec; 
+        unsigned int r = 0, c = 0;
+        const int rows = 4, cols = 4;
+        int arr[rows][cols] = {{0, 0, 0, 0},
+                               {0, 0, 1, 1},
+                               {1, 1, 0, 0},
+                               {1, 1, 1, 1}};
+
+        for (r = 0; r < rows; r++){
+            rowvec.clear();
+            for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
+            v2d.push_back(rowvec);
+        }
+        return v2d;
+    }
+
+    vector<double> terms_signs(){
+        const double arr[4] = {1., -1., -1., 1.};
+        vector<double> signs (arr, arr + sizeof(arr) / sizeof(int));
+        return signs;
+    }
 }; 
 
 template <typename M>
-class Gamma1Gamma2ExpSquaredKernel : public ExpSquaredKernel<M>{
+class Gamma1Gamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public: 
-    // x1 is supposed to be the coordinates 
     Gamma1Gamma2ExpSquaredKernel (const long ndim, M* metric)
-      : ExpSquaredKernel<M>(ndim, metric){}; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
+
+    using Kernel::value;
+    virtual double value (const double* x1, const double* x2) {
+        printf("Inside Gamma1Gamma2 modified value method\n");
+        const vector< vector<int> > ix_list = this->ix_list();
+
+        vector<double> signs = this->terms_signs();
+        return exp(-0.5 * this->get_squared_distance(x1, x2)) 
+            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs); 
+    };
+
+private:
+    vector< vector<int> > ix_list(){
+        vector< vector<int> > v2d;
+        vector<int> rowvec; 
+        unsigned int r = 0, c = 0;
+        const int rows = 4, cols = 4;
+        int arr[rows][cols] = {{0, 0, 0, 1},
+                               {0, 0, 1, 0},
+                               {1, 1, 0, 1},
+                               {1, 1, 1, 0}};
+
+        for (r = 0; r < rows; r++){
+            rowvec.clear();
+            for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
+            v2d.push_back(rowvec);
+        }
+        return v2d;
+    }
+
+    vector<double> terms_signs(){
+        const double arr[4] = {1., 1., -1., -1.};
+        vector<double> signs (arr, arr + sizeof(arr) / sizeof(int));
+        return signs;
+    }
 }; 
 
 template <typename M>
 // ideally this class should be added in a different .h file 
-class Gamma2Gamma2ExpSquaredKernel : public ExpSquaredKernel<M>{
+class Gamma2Gamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public: 
     // have to figure out if this constructor is correct 
     // x1 is supposed to be the coordinates 
     Gamma2Gamma2ExpSquaredKernel (const long ndim, M* metric)
-      : ExpSquaredKernel<M>(ndim, metric){}; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
+
+    using Kernel::value;
+    virtual double value (const double* x1, const double* x2) {
+        printf("Inside Gamma2Gamma2 modified value method\n");
+        const vector< vector<int> > ix_list = this->ix_list();
+
+        vector<double> signs = this->terms_signs();
+        return exp(-0.5 * this->get_squared_distance(x1, x2)) 
+            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs); 
+    };
+
+private:
+    vector< vector<int> > ix_list(){
+        vector< vector<int> > v2d;
+        vector<int> rowvec; 
+        unsigned int r = 0, c = 0;
+        const int rows = 4, cols = 4;
+        int arr[rows][cols] = {{0, 1, 0, 1},
+                               {0, 1, 1, 0},
+                               {1, 0, 0, 1},
+                               {1, 0, 1, 0}};
+
+        for (r = 0; r < rows; r++){
+            rowvec.clear();
+            for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
+            v2d.push_back(rowvec);
+        }
+        return v2d;
+    }
+
+    vector<double> terms_signs(){
+        const double arr[4] = {1., 1., 1., 1.};
+        vector<double> signs (arr, arr + sizeof(arr) / sizeof(int));
+        return signs;
+    }
 }; 
 
 //
