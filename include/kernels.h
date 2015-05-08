@@ -21,7 +21,7 @@ public:
         // printf ("calling Kernel.value !!! WRONG INHERITANCE\n");
         return 0.0;
     };
-    virtual void gradient (const double* x1, const double* x2, double* grad) const {
+    virtual void gradient (const double* x1, const double* x2, double* grad) {
         unsigned int i;
         for (i = 0; i < this->size(); ++i) grad[i] = 0.0;
     };
@@ -72,7 +72,7 @@ public:
     virtual double value (const double* x1, const double* x2) {
         return f_(parameters_, size_, meta_, x1, x2, this->get_ndim());
     };
-    void gradient (const double* x1, const double* x2, double* grad) const {
+    void gradient (const double* x1, const double* x2, double* grad) {
         g_(parameters_, size_, meta_, x1, x2, this->get_ndim(), grad);
     };
 
@@ -143,7 +143,7 @@ public:
         return this->kernel1_->value(x1, x2) + this->kernel2_->value(x1, x2);
     };
 
-    void gradient (const double* x1, const double* x2, double* grad) const {
+    void gradient (const double* x1, const double* x2, double* grad) {
         unsigned int n = this->kernel1_->size();
         this->kernel1_->gradient(x1, x2, grad);
         this->kernel2_->gradient(x1, x2, &(grad[n]));
@@ -160,7 +160,7 @@ public:
         return this->kernel1_->value(x1, x2) * this->kernel2_->value(x1, x2);
     };
 
-    void gradient (const double* x1, const double* x2, double* grad) const {
+    void gradient (const double* x1, const double* x2, double* grad) {
         unsigned int i, n1 = this->kernel1_->size(), n2 = this->size();
 
         this->kernel1_->gradient(x1, x2, grad);
@@ -186,7 +186,7 @@ public:
     double value (const double* x1, const double* x2) {
         return value_;
     };
-    void gradient (const double* x1, const double* x2, double* grad) const {
+    void gradient (const double* x1, const double* x2, double* grad) {
         grad[0] = 1.0;
     };
 
@@ -219,7 +219,7 @@ public:
         return value_ * _switch(x1, x2);
     };
 
-    void gradient (const double* x1, const double* x2, double* grad) const {
+    void gradient (const double* x1, const double* x2, double* grad) {
         grad[0] = _switch(x1, x2);
     };
 
@@ -243,7 +243,7 @@ public:
         for (i = 0; i < ndim; ++i) val += x1[i] * x2[i];
         return val;
     };
-    void gradient (const double* x1, const double* x2, double* grad) const {};
+    void gradient (const double* x1, const double* x2, double* grad) {};
     unsigned int size () const { return 0; }
 };
 
@@ -379,7 +379,7 @@ public:
     double get_radial_gradient (double r2) const {
         return -0.5 * pow(1 + 0.5 * r2 / alpha_, -alpha_-1);
     };
-    void gradient (const double* x1, const double* x2, double* grad) const {
+    void gradient (const double* x1, const double* x2, double* grad) {
         double r2 = this->metric_gradient(x1, x2, &(grad[1])),
                t1 = 1.0 + 0.5 * r2 / alpha_,
                t2 = 2.0 * alpha_ * t1;
@@ -420,7 +420,7 @@ public:
         return 0;
     };
 
-    virtual double metric_gradient (const double* x1, const double* x2, double* grad) {
+    double metric_gradient (const double* x1, const double* x2, double* grad) {
         int i, n = metric_->size();
         double r2 = metric_->gradient(x1, x2, grad),
                // gets the alternative get_radial_gradient method
@@ -608,9 +608,7 @@ template <typename M>
 class KappaKappaExpSquaredKernel: public DerivativeExpSquaredKernel<M>{
 public: 
     KappaKappaExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric) {
-          // printf("constructing KappaKappaExpSquaredKernel\n");
-      }; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric) {}; 
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
@@ -624,9 +622,9 @@ public:
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
-        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter();
+        printf("KappaKappaExpSquaredKernel.get_radial_gradient invoked");
+        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter(0);
     };
-
 
 private:
     vector< vector<int> > ix_list(){
@@ -671,7 +669,8 @@ public:
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
-        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter();
+        printf("KappaGamma1ExpSquaredKernel.get_radial_gradient invoked");
+        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter(0);
     };
 
 
@@ -705,7 +704,7 @@ template <typename M>
 class KappaGamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public: 
     KappaGamma2ExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric), metric_(metric){}; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric) {}; 
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
@@ -718,12 +717,12 @@ public:
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
-        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter();
+        printf("KappaGamma2ExpSquaredKernel.get_radial_gradient invoked");
+        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter(0);
     };
 
 
 private:
-    M* metric_;
     vector< vector<int> > ix_list(){
         vector< vector<int> > v2d;
         vector<int> rowvec; 
@@ -755,7 +754,7 @@ public:
     // have to figure out if this constructor is correct 
     // x1 is supposed to be the coordinates 
     Gamma1Gamma1ExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric), metric_(metric){}; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
@@ -768,19 +767,11 @@ public:
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
-        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter();
+        printf("Gamma1Gamma1ExpSquaredKernel.get_radial_gradient invoked");
+        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter(0);
     };
    
-    virtual double metric_gradient (const double* x1, const double* x2, double* grad) {
-        int i, n = metric_->size();
-        double r2 = metric_->gradient(x1, x2, grad),
-               kg = this->get_radial_gradient(x1, x2, r2);
-        for (i = 0; i < n; ++i) grad[i] *= kg;
-        return r2;
-    };
-
 private:
-    M* metric_;
     vector< vector<int> > ix_list(){
         vector< vector<int> > v2d;
         vector<int> rowvec; 
@@ -822,7 +813,8 @@ public:
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
-        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter();
+        printf("Gamma1Gamma2ExpSquaredKernel.get_radial_gradient invoked");
+        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter(0);
     };
 
 private:
@@ -857,7 +849,7 @@ template <typename M>
 class Gamma2Gamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public: 
     Gamma2Gamma2ExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric), metric_(metric){}; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric) {}; 
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
@@ -869,11 +861,10 @@ public:
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
-        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter();
+        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter(0);
     }; 
 
 private:
-    M* metric_;
     vector< vector<int> > ix_list(){
         vector< vector<int> > v2d;
         vector<int> rowvec; 
@@ -911,7 +902,7 @@ public:
     double value (const double* x1, const double* x2) {
         return cos(2 * M_PI * (x1[dim_] - x2[dim_]) / period_);
     };
-    void gradient (const double* x1, const double* x2, double* grad) const {
+    void gradient (const double* x1, const double* x2, double* grad) {
         double dx = 2 * M_PI * (x1[dim_] - x2[dim_]) / period_;
         grad[0] = dx * sin(dx) / period_;
     };
@@ -936,7 +927,7 @@ public:
         double s = sin(M_PI * (x1[dim_] - x2[dim_]) / period_);
         return exp(-gamma_ * s * s);
     };
-    void gradient (const double* x1, const double* x2, double* grad) const {
+    void gradient (const double* x1, const double* x2, double* grad) {
         double arg = M_PI * (x1[dim_] - x2[dim_]) / period_,
                s = sin(arg), c = cos(arg), s2 = s * s, A = exp(-gamma_ * s2);
 
