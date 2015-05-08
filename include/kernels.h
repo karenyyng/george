@@ -265,15 +265,16 @@ public:
     double get_squared_distance (const double* x1, const double* x2) const {
         return metric_->get_squared_distance(x1, x2);
     };
-    virtual double get_radial_gradient (double r2) const {
+    
+    double get_radial_gradient (double r2) const {
         return 0.0;
     };
 
-    virtual void gradient (const double* x1, const double* x2, double* grad) const {
+    void gradient (const double* x1, const double* x2, double* grad) {
         metric_gradient(x1, x2, grad);
     };
 
-    double metric_gradient (const double* x1, const double* x2, double* grad) const {
+    virtual double metric_gradient (const double* x1, const double* x2, double* grad) {
         int i, n = metric_->size();
         double r2 = metric_->gradient(x1, x2, grad),
                kg = this->get_radial_gradient(r2);
@@ -322,9 +323,16 @@ public:
         // printf("Inside ExpSquared original value method\n");
         return exp(-0.5 * this->get_squared_distance(x1, x2));
     };
+
     double get_radial_gradient (double r2) const {
         return -0.5 * exp(-0.5 * r2);
     };
+   
+    virtual double metric_gradient (const double* x1, const double* x2, double* grad) {
+        throw "Code should not invoke ExpSquaredKernel.metric_gradient()";
+    };
+
+
 };
 
 template <typename M>
@@ -399,19 +407,33 @@ public:
     // have to figure out if this constructor is correct 
     // x1 is supposed to be the coordinates 
     DerivativeExpSquaredKernel (const long ndim, M* metric)
-      : ExpSquaredKernel<M>(ndim, metric){}; 
+      : ExpSquaredKernel<M>(ndim, metric), metric_(metric){}; 
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        // printf ("Inside DerivativeExpSquaredKernel which shouldn't be called\n");
+        throw "Code should not invoke DerivativeExpSquaredKernel.value()";
         return 0.;
     }
 
-                            
+    virtual double get_radial_gradient (const double* x1, const double* x2) {
+        throw "Shouldn't be calling DerivativeExpSquaredKernel.get_radial_gradient()";
+        return 0;
+    };
+
+    virtual double metric_gradient (const double* x1, const double* x2, double* grad) {
+        int i, n = metric_->size();
+        double r2 = metric_->gradient(x1, x2, grad),
+               // gets the alternative get_radial_gradient method
+               // otherwise will get error  
+               kg = this->get_radial_gradient(x1, x2);
+        for (i = 0; i < n; ++i) grad[i] *= kg;
+        return r2;
+    };
+
 protected:
+    M* metric_;
     static const int ix_rows = 6, ix_cols = 4;
-    double X(const double* x1, const double* x2, 
-            const int spatial_ix){ 
+    double X(const double* x1, const double* x2, const int spatial_ix){ 
         // printf ("Inside X: \n");
         // printf ("x1[spatial_ix] = %2f\n", x1[spatial_ix]);
         // printf ("x2[spatial_ix] = %2f\n", x2[spatial_ix]);
@@ -586,12 +608,13 @@ template <typename M>
 class KappaKappaExpSquaredKernel: public DerivativeExpSquaredKernel<M>{
 public: 
     KappaKappaExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric){
+      : DerivativeExpSquaredKernel<M>(ndim, metric) {
           // printf("constructing KappaKappaExpSquaredKernel\n");
       }; 
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
+        // cannot store statically anywhere!!
         // printf("Inside KappaKappa modified value method\n");
         const vector< vector<int> > ix_list = this->ix_list();
 
@@ -599,6 +622,11 @@ public:
         return exp(-0.5 * this->get_squared_distance(x1, x2)) 
             * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs); 
     };
+
+    double get_radial_gradient (const double* x1, const double* x2) {
+        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter();
+    };
+
 
 private:
     vector< vector<int> > ix_list(){
@@ -630,7 +658,7 @@ template <typename M>
 class KappaGamma1ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public: 
     KappaGamma1ExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric) {}; 
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
@@ -641,6 +669,11 @@ public:
         return exp(-0.5 * this->get_squared_distance(x1, x2)) 
             * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs); 
     };
+
+    double get_radial_gradient (const double* x1, const double* x2) {
+        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter();
+    };
+
 
 private:
     vector< vector<int> > ix_list(){
@@ -672,7 +705,7 @@ template <typename M>
 class KappaGamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public: 
     KappaGamma2ExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric), metric_(metric){}; 
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
@@ -684,7 +717,13 @@ public:
             * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs); 
     };
 
+    double get_radial_gradient (const double* x1, const double* x2) {
+        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter();
+    };
+
+
 private:
+    M* metric_;
     vector< vector<int> > ix_list(){
         vector< vector<int> > v2d;
         vector<int> rowvec; 
@@ -716,7 +755,7 @@ public:
     // have to figure out if this constructor is correct 
     // x1 is supposed to be the coordinates 
     Gamma1Gamma1ExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric), metric_(metric){}; 
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
@@ -728,7 +767,20 @@ public:
             * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs); 
     };
 
+    double get_radial_gradient (const double* x1, const double* x2) {
+        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter();
+    };
+   
+    virtual double metric_gradient (const double* x1, const double* x2, double* grad) {
+        int i, n = metric_->size();
+        double r2 = metric_->gradient(x1, x2, grad),
+               kg = this->get_radial_gradient(x1, x2, r2);
+        for (i = 0; i < n; ++i) grad[i] *= kg;
+        return r2;
+    };
+
 private:
+    M* metric_;
     vector< vector<int> > ix_list(){
         vector< vector<int> > v2d;
         vector<int> rowvec; 
@@ -758,11 +810,10 @@ template <typename M>
 class Gamma1Gamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public: 
     Gamma1Gamma2ExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric), metric_(metric){}; 
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        // printf("Inside Gamma1Gamma2 modified value method\n");
         const vector< vector<int> > ix_list = this->ix_list();
 
         vector<double> signs = this->terms_signs();
@@ -770,7 +821,12 @@ public:
             * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs); 
     };
 
+    double get_radial_gradient (const double* x1, const double* x2) {
+        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter();
+    };
+
 private:
+    M* metric_;
     vector< vector<int> > ix_list(){
         vector< vector<int> > v2d;
         vector<int> rowvec; 
@@ -800,14 +856,11 @@ template <typename M>
 // ideally this class should be added in a different .h file 
 class Gamma2Gamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public: 
-    // have to figure out if this constructor is correct 
-    // x1 is supposed to be the coordinates 
     Gamma2Gamma2ExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric){}; 
+      : DerivativeExpSquaredKernel<M>(ndim, metric), metric_(metric){}; 
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        // printf("Inside Gamma2Gamma2 modified value method\n");
         const vector< vector<int> > ix_list = this->ix_list();
 
         vector<double> signs = this->terms_signs();
@@ -815,7 +868,12 @@ public:
             * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs); 
     };
 
+    double get_radial_gradient (const double* x1, const double* x2) {
+        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter();
+    }; 
+
 private:
+    M* metric_;
     vector< vector<int> > ix_list(){
         vector< vector<int> > v2d;
         vector<int> rowvec; 
