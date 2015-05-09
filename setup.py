@@ -12,7 +12,7 @@ except ImportError:
 #     from distutils.command.build_ext import build_ext as _build_ext
 
 from Cython.Distutils import build_ext as _build_ext
-from Cython.Distutils import extension as Extension
+from Cython.Distutils.extension import Extension
 
 
 
