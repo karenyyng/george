@@ -623,7 +623,7 @@ public:
 
     double get_radial_gradient (const double* x1, const double* x2) {
         printf("KappaKappaExpSquaredKernel.get_radial_gradient invoked");
-        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter(0);
+        return -0.5 * this->value(x1, x2);
     };
 
 private:
@@ -670,7 +670,7 @@ public:
 
     double get_radial_gradient (const double* x1, const double* x2) {
         printf("KappaGamma1ExpSquaredKernel.get_radial_gradient invoked");
-        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter(0);
+        return -0.5 * this->value(x1, x2);
     };
 
 
@@ -718,7 +718,7 @@ public:
 
     double get_radial_gradient (const double* x1, const double* x2) {
         printf("KappaGamma2ExpSquaredKernel.get_radial_gradient invoked");
-        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter(0);
+        return -0.5 * this->value(x1, x2) ;
     };
 
 
@@ -768,7 +768,7 @@ public:
 
     double get_radial_gradient (const double* x1, const double* x2) {
         printf("Gamma1Gamma1ExpSquaredKernel.get_radial_gradient invoked");
-        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter(0);
+        return -0.5 * this->value(x1, x2);
     };
    
 private:
@@ -814,7 +814,7 @@ public:
 
     double get_radial_gradient (const double* x1, const double* x2) {
         printf("Gamma1Gamma2ExpSquaredKernel.get_radial_gradient invoked");
-        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter(0);
+        return -0.5 * this->value(x1, x2);
     };
 
 private:
@@ -861,7 +861,7 @@ public:
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
-        return -0.5 * this->value(x1, x2) * this->metric_->get_parameter(0);
+        return -0.5 * this->value(x1, x2);
     }; 
 
 private:
