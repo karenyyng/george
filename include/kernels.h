@@ -433,14 +433,16 @@ public:
 protected:
     M* metric_;
     static const int ix_rows = 6, ix_cols = 4;
-    double X(const double* x1, const double* x2, const int spatial_ix){ 
+    double X(const double* x1, const double* x2, const int spatial_ix){  
+        /* l_sq fixed  */
+
         // printf ("Inside X: \n");
         // printf ("x1[spatial_ix] = %2f\n", x1[spatial_ix]);
         // printf ("x2[spatial_ix] = %2f\n", x2[spatial_ix]);
         // printf ("this->metric_->get_parameter(spatial_ix) = %2f\n", 
         //         this->metric_->get_parameter(spatial_ix));
         // printf("spatial_ix = %d\n", spatial_ix);
-        return (x1[spatial_ix] - x2[spatial_ix]) * 
+        return (x1[spatial_ix] - x2[spatial_ix]) / 
             this->metric_->get_parameter(spatial_ix);
     }
 
@@ -499,17 +501,19 @@ protected:
 
     double termB(const double* x1, const double* x2, 
                  const vector<int> ix) {
+        /* l_sq fixed  */
         if (ix[2] != ix[3]) { return 0; }
 
         // printf ("termB: ix[1] = %d\n", ix[1]);
         // printf ("termB: ix[0] = %d\n", ix[0]);
         // printf ("termB = %.2f\n", this->X(x1, x2, ix[0]) * 
         //         this->X(x1, x2, ix[1] * this->get_parameter(ix[2])));
-        return this->X(x1, x2, ix[0]) * this->X(x1, x2, ix[1]) * 
+        return this->X(x1, x2, ix[0]) * this->X(x1, x2, ix[1]) / 
             this->metric_->get_parameter(ix[2]);
     }
 
     double termC(const vector<int> ix) {
+        /* l_sq fixed  */
         if (ix[0] != ix[1]) { return 0; } 
         if (ix[2] != ix[3]) { return 0; }
         // printf ("termC: ix[2] = %2d\n", ix[2]);
@@ -518,8 +522,8 @@ protected:
         // printf ("termC: ix[0] = %2d\n", ix[0]);
         // printf ("termC: this->metric_->get_parameter(ix[0]) = %.2f\n", 
         //         this->metric_->get_parameter(ix[0]));
-        return this->metric_->get_parameter(ix[2]) * 
-            this->metric_->get_parameter(ix[0]);
+        return 1. / (this->metric_->get_parameter(ix[2]) * 
+            this->metric_->get_parameter(ix[0]));
     }
 
     vector< vector<int> > combine_B_ixes(const vector<int> kernel_B_ix){
@@ -612,8 +616,6 @@ public:
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        // cannot store statically anywhere!!
-        // printf("Inside KappaKappa modified value method\n");
         const vector< vector<int> > ix_list = this->ix_list();
 
         vector<double> signs = this->terms_signs();
@@ -622,7 +624,7 @@ public:
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
-        printf("KappaKappaExpSquaredKernel.get_radial_gradient invoked");
+        printf("KappaKappaExpSquaredKernel.get_radial_gradient invoked\n");
         return -0.5 * this->value(x1, x2);
     };
 
@@ -669,7 +671,7 @@ public:
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
-        printf("KappaGamma1ExpSquaredKernel.get_radial_gradient invoked");
+        printf("KappaGamma1ExpSquaredKernel.get_radial_gradient invoked\n");
         return -0.5 * this->value(x1, x2);
     };
 
@@ -717,7 +719,7 @@ public:
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
-        printf("KappaGamma2ExpSquaredKernel.get_radial_gradient invoked");
+        printf("KappaGamma2ExpSquaredKernel.get_radial_gradient invoked\n");
         return -0.5 * this->value(x1, x2) ;
     };
 
@@ -767,7 +769,7 @@ public:
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
-        printf("Gamma1Gamma1ExpSquaredKernel.get_radial_gradient invoked");
+        printf("Gamma1Gamma1ExpSquaredKernel.get_radial_gradient invoked\n");
         return -0.5 * this->value(x1, x2);
     };
    
@@ -813,7 +815,7 @@ public:
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
-        printf("Gamma1Gamma2ExpSquaredKernel.get_radial_gradient invoked");
+        printf("Gamma1Gamma2ExpSquaredKernel.get_radial_gradient invoked\n");
         return -0.5 * this->value(x1, x2);
     };
 
