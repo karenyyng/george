@@ -12,7 +12,7 @@ namespace metrics {
 class Metric {
 public:
     Metric (const unsigned int ndim, const unsigned int size)
-        : ndim_(ndim), vector_(size) {};
+        : ndim_(ndim), vector_(size, 1) {};
     virtual ~Metric () {};
     virtual double get_squared_distance (const double* x1, const double* x2) const {
         return 0.0;
@@ -24,10 +24,10 @@ public:
     // Parameter vector spec.
     virtual unsigned int size () const { return vector_.size(); };
     void set_parameter (const unsigned int i, const double value) {
-        vector_[i] = value;
+        vector_.at(i) = value;
     };
     double get_parameter (const unsigned int i) const {
-        return vector_[i];
+        return vector_.at(i);
     };
 
 protected:
