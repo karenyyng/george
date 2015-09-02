@@ -899,13 +899,23 @@ public:
 
       x_max_ = 1.0;
 
-      // TODO: Make copies of metric instance for each kernel type?
-      kk_ = new KappaKappaExpSquaredKernel<M>(this->ndim_, metric);
-      kg1_ = new KappaGamma1ExpSquaredKernel<M>(this->ndim_, metric);
-      kg2_ = new KappaGamma2ExpSquaredKernel<M>(this->ndim_, metric);
-      g1g2_ = new Gamma1Gamma2ExpSquaredKernel<M>(this->ndim_, metric);
-      g1g1_ = new Gamma1Gamma1ExpSquaredKernel<M>(this->ndim_, metric);
-      g2g2_ = new Gamma2Gamma2ExpSquaredKernel<M>(this->ndim_, metric);
+      M* metric_kk = new M(*metric);
+      kk_ = new KappaKappaExpSquaredKernel<M>(this->ndim_, metric_kk);
+
+      M* metric_kg1 = new M(*metric);
+      kg1_ = new KappaGamma1ExpSquaredKernel<M>(this->ndim_, metric_kg1);
+
+      M* metric_kg2 = new M(*metric);
+      kg2_ = new KappaGamma2ExpSquaredKernel<M>(this->ndim_, metric_kg2);
+
+      M* metric_g1g2 = new M(*metric);
+      g1g2_ = new Gamma1Gamma2ExpSquaredKernel<M>(this->ndim_, metric_g1g2);
+
+      M* metric_g1g1 = new M(*metric);
+      g1g1_ = new Gamma1Gamma1ExpSquaredKernel<M>(this->ndim_, metric_g1g1);
+
+      M* metric_g2g2 = new M(*metric);
+      g2g2_ = new Gamma2Gamma2ExpSquaredKernel<M>(this->ndim_, metric_g2g2);
     };
 
   ~GravLensingExpSquaredKernel () {
@@ -914,7 +924,7 @@ public:
     delete kg2_;
     delete g1g2_;
     delete g1g1_;
-    delete g1g2_;
+    delete g2g2_;
   }
 
   // Assume the GP is defined on the interval [0, x_max_]
@@ -926,28 +936,30 @@ public:
   using Kernel::value;
   virtual double value (const double* x1, const double* x2) {
     // Figure out which kernel to use based on values of x1, x2
+    // TODO: We're assuming that x1[0] and x[1] lie on the same interval.
+    //  => Need to check for this.
     double x1std[this->ndim_], x2std[this->ndim_];
     lens_field_t lens_field1, lens_field2;
     for (size_t i=0; i<this->ndim_; i++) {
-      if (x1[i] <= x_max_) {
+      if (x1[i] < x_max_) {
         lens_field1 = kappa;
         x1std[i] = x1[i];
-      } else if (x1[i] <= 2*x_max_) {
+      } else if (x1[i] < 2*x_max_) {
         lens_field1 = gamma1;
         x1std[i] = x1[i] - x_max_;
-      } else if (x1[i] <= 3*x_max_) {
+      } else if (x1[i] < 3*x_max_) {
         lens_field1 = gamma2;
         x1std[i] = x1[i] - 2*x_max_;
       } else {
         throw "GravLensingExpSquaredKernel::value -- Invalid x range";
       }
-      if (x2[i] <= x_max_) {
+      if (x2[i] < x_max_) {
         lens_field2 = kappa;
         x2std[i] = x2[i];
-      } else if (x2[i] <= 2*x_max_) {
+      } else if (x2[i] < 2*x_max_) {
         lens_field2 = gamma1;
         x2std[i] = x2[i] - x_max_;
-      } else if (x2[i] <= 3*x_max_) {
+      } else if (x2[i] < 3*x_max_) {
         lens_field2 = gamma2;
         x2std[i] = x2[i] - 2*x_max_;
       } else {

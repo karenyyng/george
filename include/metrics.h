@@ -13,6 +13,8 @@ class Metric {
 public:
     Metric (const unsigned int ndim, const unsigned int size)
         : ndim_(ndim), vector_(size, 1) {};
+    // Copy constructor
+    Metric ( const Metric& aCopy ) { Copy( aCopy ); };
     virtual ~Metric () {};
     virtual double get_squared_distance (const double* x1, const double* x2) const {
         return 0.0;
@@ -28,6 +30,16 @@ public:
     };
     double get_parameter (const unsigned int i) const {
         return vector_.at(i);
+    };
+
+    void Copy( const Metric& aCopy ) {
+      ndim_ = aCopy.ndim_;
+      vector_ = aCopy.vector_;
+    };
+
+    Metric operator=( const Metric& aCopy ) {
+      Copy( aCopy );
+      return *this;
     };
 
 protected:
