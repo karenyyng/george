@@ -887,6 +887,141 @@ private:
 };
 
 //
+// 'Composite' gravitational lensing kernel
+//
+enum lens_field_t {kappa, gamma1, gamma2};
+
+template <typename M>
+class GravLensingExpSquaredKernel: public ExpSquaredKernel<M> {
+public:
+  GravLensingExpSquaredKernel (M* metric) :
+    ExpSquaredKernel<M>(2, metric) { // This kernel only defined for ndim = 2
+
+      x_max_ = 1.0;
+
+      // TODO: Make copies of metric instance for each kernel type?
+      kk_ = new KappaKappaExpSquaredKernel<M>(this->ndim_, metric);
+      kg1_ = new KappaGamma1ExpSquaredKernel<M>(this->ndim_, metric);
+      kg2_ = new KappaGamma2ExpSquaredKernel<M>(this->ndim_, metric);
+      g1g2_ = new Gamma1Gamma2ExpSquaredKernel<M>(this->ndim_, metric);
+      g1g1_ = new Gamma1Gamma1ExpSquaredKernel<M>(this->ndim_, metric);
+      g2g2_ = new Gamma2Gamma2ExpSquaredKernel<M>(this->ndim_, metric);
+    };
+
+  ~GravLensingExpSquaredKernel () {
+    delete kk_;
+    delete kg1_;
+    delete kg2_;
+    delete g1g2_;
+    delete g1g1_;
+    delete g1g2_;
+  }
+
+  // Assume the GP is defined on the interval [0, x_max_]
+  //
+  // We parse the input x1,x2 by mapping:
+  //   - [0, x_max_] -> kappa
+  //   - [x_max_, 2*x_max_] -> gamma1
+  //   - [2*x_max_, 3*x_max_] -> gamma2
+  using Kernel::value;
+  virtual double value (const double* x1, const double* x2) {
+    // Figure out which kernel to use based on values of x1, x2
+    double x1std[this->ndim_], x2std[this->ndim_];
+    lens_field_t lens_field1, lens_field2;
+    for (size_t i=0; i<this->ndim_; i++) {
+      if (x1[i] <= x_max_) {
+        lens_field1 = kappa;
+        x1std[i] = x1[i];
+      } else if (x1[i] <= 2*x_max_) {
+        lens_field1 = gamma1;
+        x1std[i] = x1[i] - x_max_;
+      } else if (x1[i] <= 3*x_max_) {
+        lens_field1 = gamma2;
+        x1std[i] = x1[i] - 2*x_max_;
+      } else {
+        throw "GravLensingExpSquaredKernel::value -- Invalid x range";
+      }
+      if (x2[i] <= x_max_) {
+        lens_field2 = kappa;
+        x2std[i] = x2[i];
+      } else if (x2[i] <= 2*x_max_) {
+        lens_field2 = gamma1;
+        x2std[i] = x2[i] - x_max_;
+      } else if (x2[i] <= 3*x_max_) {
+        lens_field2 = gamma2;
+        x2std[i] = x2[i] - 2*x_max_;
+      } else {
+        throw "GravLensingExpSquaredKernel::value -- Invalid x range";
+      }
+    }
+
+    // Evaluate the value method of the appropriate kernel
+    double result;
+    switch(lens_field1)
+    {
+      case kappa :
+        switch(lens_field2)
+        {
+          case kappa :
+            result = kk_->value(x1std, x2std);
+            break;
+          case gamma1 :
+            result = kg1_->value(x1std, x2std);
+            break;
+          case gamma2 :
+            result = kg2_->value(x1std, x2std);
+            break;
+        }
+        break;
+      case gamma1 :
+        switch(lens_field2)
+        {
+          case kappa :
+            result = kg1_->value(x2std, x1std);
+            break;
+          case gamma1 :
+            result = g1g1_->value(x1std, x2std);
+            break;
+          case gamma2 :
+            result = g1g2_->value(x1std, x2std);
+            break;
+        }
+        break;
+      case gamma2 :
+        switch(lens_field2)
+        {
+          case kappa :
+            result = kg2_->value(x2std, x1std);
+            break;
+          case gamma1 :
+            result = g1g2_->value(x2std, x1std);
+            break;
+          case gamma2 :
+            result = g2g2_->value(x1std, x2std);
+            break;
+        }
+        break;
+    }
+    return result;
+  };
+
+  double get_radial_gradient (double r2) const {
+    printf("GravLensingExpSquaredKernel.get_radial_gradient invoked\n");
+    return 0.0;
+  };
+
+private:
+  double x_max_; // Assume the GP is defined on [0, x_max_]
+
+  KappaKappaExpSquaredKernel<M> * kk_;
+  KappaGamma1ExpSquaredKernel<M> * kg1_;
+  KappaGamma2ExpSquaredKernel<M> * kg2_;
+  Gamma1Gamma2ExpSquaredKernel<M> * g1g2_;
+  Gamma1Gamma1ExpSquaredKernel<M> * g1g1_;
+  Gamma2Gamma2ExpSquaredKernel<M> * g2g2_;
+};
+
+//
 // PERIODIC KERNELS
 //
 
