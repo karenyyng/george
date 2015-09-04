@@ -113,6 +113,10 @@ public:
                 out[i*nrhs+j] = alpha(i, j);
     };
 
+    void solve(MatrixXd& b, MatrixXd& alpha) {
+      solver_->solve(b, alpha);
+    };
+
 private:
     double logdet_, tol_;
     unsigned nleaf_;
