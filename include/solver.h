@@ -117,6 +117,11 @@ public:
       solver_->solve(b, alpha);
     };
 
+    void get_matrix(unsigned int n, MatrixXd& matrix) {
+      MatrixXd ident = MatrixXd::Identity(n, n);
+      solver_->matMatProduct(ident, matrix);
+    }
+
 private:
     double logdet_, tol_;
     unsigned nleaf_;
