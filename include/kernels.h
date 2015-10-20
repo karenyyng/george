@@ -7,6 +7,8 @@
 #include <iostream>
 
 using std::vector;
+using std::cout;
+using std::endl;
 
 namespace george {
 namespace kernels {
@@ -399,24 +401,21 @@ private:
     double alpha_;
 };
 
-
-// ideally this class should be added in a different .h file
 template <typename M>
 class DerivativeExpSquaredKernel: public ExpSquaredKernel<M>{
 public:
-    // have to figure out if this constructor is correct
-    // x1 is supposed to be the coordinates
-    DerivativeExpSquaredKernel (const long ndim, M* metric)
-      : ExpSquaredKernel<M>(ndim, metric) {};
+    DerivativeExpSquaredKernel (const long ndim, M* metric);
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        throw "Code should not invoke DerivativeExpSquaredKernel.value()";
+        std::cerr << "Code should not invoke DerivativeExpSquaredKernel.value()";
+        exit(1);
         return 0.;
     }
 
     virtual double get_radial_gradient (const double* x1, const double* x2) {
-        throw "Shouldn't be calling DerivativeExpSquaredKernel.get_radial_gradient()";
+        std::cerr << "Shouldn't be calling DerivativeExpSquaredKernel.get_radial_gradient()";
+        exit(1);
         return 0;
     };
 
@@ -430,9 +429,23 @@ public:
         return r2;
     };
 
+    void print_ix_list(vector <vector <int> > vec2D) const {
+        for (unsigned int i = 0; i < vec2D.size(); i++){
+            for (unsigned int j = 0; j < vec2D[0].size(); j++){
+                cout << vec2D[i][j] << ", ";
+            }
+            cout << endl;
+        }
+    }
+
 protected:
     // M* metric_;
     static const int ix_rows = 6, ix_cols = 4;
+    vector < vector <int> > pairs_of_B_ixes_;
+    vector < vector <int> > pairs_of_C_ixes_;
+    vector < vector <int> > comb_B_ixes_;
+    vector < vector <int> > comb_C_ixes_;
+    
     double X(const double* x1, const double* x2, const int spatial_ix){
         /* l_sq fixed  */
 
@@ -441,17 +454,13 @@ protected:
         // printf ("x2[spatial_ix] = %2f\n", x2[spatial_ix]);
         // printf ("this->metric_->get_parameter(spatial_ix) = %2f\n",
         //         this->metric_->get_parameter(spatial_ix));
-        // printf("spatial_ix = %d\n", spatial_ix);
+        // printf ("spatial_ix = %d\n", spatial_ix);
         return (x1[spatial_ix] - x2[spatial_ix]) /
             this->metric_->get_parameter(spatial_ix);
     }
 
-    vector< vector<int> > get_termB_ixes(){
-        // I am not sure if it is better to create a vector
-        // or a 2D dynamic array in terms of memory usage.
-        // Seems like either way, this method will be called N^2 / 2. times.
+    void set_termB_ixes(vector <vector <int> >& v2d){
         unsigned int r, c;
-        vector<vector<int> > v2d;
         vector<int> rowvector;
         const int rows = 6, cols = 4;
 
@@ -467,13 +476,10 @@ protected:
             for (c = 0; c < cols; c++ ) { rowvector.push_back(arr[r][c]); }
             v2d.push_back(rowvector);
         }
-
-        return v2d;
     }
 
-    vector< vector<int> > get_termC_ixes(){
+    void set_termC_ixes(vector <vector <int> >& v2d){
         unsigned int r, c;
-        vector<vector<int> > v2d;
         vector<int> rowvector;
         const int rows = 3, cols = 4;
 
@@ -486,8 +492,6 @@ protected:
             for (c = 0; c < cols; c++ ) { rowvector.push_back(arr[r][c]); }
             v2d.push_back(rowvector);
         }
-
-        return v2d;
     }
 
     double termA(const double* x1, const double* x2, vector<int> ix) {
@@ -526,57 +530,57 @@ protected:
             this->metric_->get_parameter(ix[0]));
     }
 
-    vector< vector<int> > combine_B_ixes(const vector<int> kernel_B_ix){
+    void set_combine_B_ixes(const vector<int> kernel_B_ix){
         // @param B_ix contain the kernel indices, a list of 4 integers
-        vector< vector<int> > ix = get_termB_ixes();
-        unsigned int rows = ix.size(), cols = ix[0].size();
-        vector< vector<int> > termB_ixes;
+        // vector< vector<int> > ix = set_termB_ixes();
+        // should not be returned - this should be a member variable 
+        unsigned int rows = pairs_of_B_ixes_.size(), cols = pairs_of_B_ixes_[0].size();
         vector<int> temp_row;
 
         for (size_t r = 0; r < rows; r++){
             temp_row.clear();
             for (size_t c = 0; c < cols; c++){
-                temp_row.push_back(kernel_B_ix[ix[r][c]]);
+                temp_row.push_back(kernel_B_ix[pairs_of_B_ixes_[r][c]]);
             }
-            termB_ixes.push_back(temp_row);
+            comb_B_ixes_.push_back(temp_row);
         }
-        return termB_ixes;
     }
 
-    vector< vector<int> > combine_C_ixes(const vector<int> kernel_C_ix){
+    void set_combine_C_ixes(const vector<int> kernel_C_ix){
         // @param C_ix contain the kernel indices
-        vector< vector<int> > ix = get_termC_ixes();
-        unsigned int rows = ix.size(), cols = ix[0].size();
-        vector< vector<int> > termC_ixes;
+        // vector< vector<int> > ix = set_termC_ixes();
+        unsigned int rows = pairs_of_C_ixes_.size(), cols = pairs_of_C_ixes_[0].size();
+        // vector< vector<int> > termC_ixes;
         vector<int> temp_row;
 
         for (size_t r = 0; r < rows; r++){
             temp_row.clear();
             for (size_t c = 0; c < cols; c++){
-                temp_row.push_back(kernel_C_ix[ix[r][c]]);
+                temp_row.push_back(kernel_C_ix[pairs_of_C_ixes_[r][c]]);
             }
-            termC_ixes.push_back(temp_row);
+            comb_C_ixes_.push_back(temp_row);
         }
-        return termC_ixes;
+        // return termC_ixes;
     }
 
     double Sigma4thDeriv(const vector<int> ix, const double* x1,
             const double* x2){
-        // if we do decide to separate beta from the metric
         double allTermBs = 0.;
         double allTermCs = 0.;
 
-        vector< vector<int> > combine_B_ixes_v = combine_B_ixes(ix);
+        set_combine_B_ixes(ix);
+        set_combine_C_ixes(ix);
 
-        vector< vector<int> > combine_C_ixes_v = combine_C_ixes(ix);
+        // vector< vector<int> > combine_B_ixes_v = combine_B_ixes(ix);
+        // vector< vector<int> > combine_C_ixes_v = combine_C_ixes(ix);
 
-        for (vector< vector<int> >::iterator row_it = combine_B_ixes_v.begin();
-           row_it < combine_B_ixes_v.end(); ++row_it ){
+        for (vector< vector<int> >::iterator row_it = comb_B_ixes_.begin();
+           row_it < comb_B_ixes_.end(); ++row_it ){
            allTermBs += termB(x1, x2, *row_it);
         }
 
-        for (vector< vector<int> >::iterator row_it = combine_C_ixes_v.begin();
-           row_it < combine_C_ixes_v.end(); ++row_it ){
+        for (vector< vector<int> >::iterator row_it = comb_C_ixes_.begin();
+           row_it < comb_C_ixes_.end(); ++row_it ){
            allTermCs += termC(*row_it);
         }
 
@@ -590,9 +594,10 @@ protected:
     }
 
 
-    double compute_Sigma4deriv_matrix(const double* x1,const double* x2,
-                                      const vector< vector<int> > ix,
+    double compute_Sigma4deriv_matrix(const double* x1, const double* x2,
+                                      const vector< vector<int> >& ix,
                                       const vector<double> signs){
+        // signs should be a member variable of the children class 
         double term = 0;
         int rows = ix.size();  // this should be 4
 
@@ -606,16 +611,12 @@ protected:
 template <typename M>
 class KappaKappaExpSquaredKernel: public DerivativeExpSquaredKernel<M>{
 public:
-    KappaKappaExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric) {};
+    KappaKappaExpSquaredKernel (const long ndim, M* metric);
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        const vector< vector<int> > ix_list = this->ix_list();
-
-        vector<double> signs = this->terms_signs();
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs);
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_, this->terms_signs_);
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
@@ -624,8 +625,10 @@ public:
     };
 
 private:
-    vector< vector<int> > ix_list(){
-        vector< vector<int> > v2d;
+    vector< vector<int> > ix_list_;
+    vector<double> terms_signs_;
+
+    void set_ix_list(vector < vector<int> >& v2d){
         vector<int> rowvec;
         const int rows = 4, cols = 4;
         int arr[rows][cols] = {{0, 0, 0, 0},
@@ -638,30 +641,24 @@ private:
             for (size_t c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
             v2d.push_back(rowvec);
         }
-        return v2d;
     }
 
-    vector<double> terms_signs(){
+    void set_terms_signs(vector<double>& signs){
         const double arr[4] = {1., 1., 1., 1.};
-        vector<double> signs (arr, arr + sizeof(arr) / sizeof(int));
-        return signs;
+        for (size_t c = 0; c < 4; c++){ signs.push_back(arr[c]); }
     }
+
 };
 
 template <typename M>
 class KappaGamma1ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
-    KappaGamma1ExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric) {};
+    KappaGamma1ExpSquaredKernel (const long ndim, M* metric);
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        // printf("Inside KappaGamma1 modified value method\n");
-        const vector< vector<int> > ix_list = this->ix_list();
-
-        vector<double> signs = this->terms_signs();
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs);
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_, this->terms_signs_);
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
@@ -671,8 +668,10 @@ public:
 
 
 private:
-    vector< vector<int> > ix_list(){
-        vector< vector<int> > v2d;
+    vector< vector<int> > ix_list_;
+    vector<double> terms_signs_;
+
+    void set_ix_list(vector< vector<int> >& v2d){
         vector<int> rowvec;
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
@@ -686,30 +685,24 @@ private:
             for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
             v2d.push_back(rowvec);
         }
-        return v2d;
     }
 
-    vector<double> terms_signs(){
+    void set_terms_signs(vector<double>& signs){
         const double arr[4] = {1., -1., 1., -1.};
-        vector<double> signs (arr, arr + sizeof(arr) / sizeof(int));
-        return signs;
+        for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
     }
 };
 
 template <typename M>
 class KappaGamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
-    KappaGamma2ExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric) {};
+    KappaGamma2ExpSquaredKernel (const long ndim, M* metric);
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        // printf("Inside KappaGamma2 modified value method\n");
-        const vector< vector<int> > ix_list = this->ix_list();
 
-        vector<double> signs = this->terms_signs();
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list, signs);
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_, this->terms_signs_);
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
@@ -719,8 +712,10 @@ public:
 
 
 private:
-    vector< vector<int> > ix_list(){
-        vector< vector<int> > v2d;
+    vector< vector<int> > ix_list_;
+    vector<double> terms_signs_;
+
+    void set_ix_list(vector< vector<int> >& v2d){
         vector<int> rowvec;
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
@@ -734,32 +729,23 @@ private:
             for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
             v2d.push_back(rowvec);
         }
-        return v2d;
     }
 
-    vector<double> terms_signs(){
+    void set_terms_signs(vector<double>& signs){
         const double arr[4] = {1., 1., 1., 1.};
-        vector<double> signs (arr, arr + sizeof(arr) / sizeof(int));
-        return signs;
+        for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
     }
 };
 
 template <typename M>
 class Gamma1Gamma1ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
-    // have to figure out if this constructor is correct
-    // x1 is supposed to be the coordinates
-    Gamma1Gamma1ExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric){};
+    Gamma1Gamma1ExpSquaredKernel (const long ndim, M* metric);
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        // printf("Inside Gamma1Gamma1 modified value method\n");
-        const vector< vector<int> > ix_list_v = ix_list();
-
-        vector<double> signs = terms_signs();
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list_v, signs);
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_, this->terms_signs_);
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
@@ -768,8 +754,10 @@ public:
     };
 
 private:
-    vector< vector<int> > ix_list(){
-        vector< vector<int> > v2d;
+    vector< vector<int> > ix_list_;
+    vector<double> terms_signs_;
+
+    void set_ix_list(vector< vector<int> >& v2d){
         vector<int> rowvec;
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
@@ -783,29 +771,26 @@ private:
             for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
             v2d.push_back(rowvec);
         }
-        return v2d;
     }
 
-    vector<double> terms_signs(){
+    void set_terms_signs(vector<double>& signs){
         const double arr[4] = {1., -1., -1., 1.};
-        vector<double> signs (arr, arr + sizeof(arr) / sizeof(int));
-        return signs;
+        for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
     }
 };
 
 template <typename M>
 class Gamma1Gamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
-    Gamma1Gamma2ExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric) {};
+    Gamma1Gamma2ExpSquaredKernel (const long ndim, M* metric);
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        const vector< vector<int> > ix_list_v = ix_list();
+        // const vector< vector<int> > ix_list_v = ix_list();
 
-        vector<double> signs = this->terms_signs();
+        // vector<double> signs = this->terms_signs();
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list_v, signs);
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_, this->terms_signs_);
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
@@ -814,9 +799,10 @@ public:
     };
 
 private:
-    // M* metric_;
-    vector< vector<int> > ix_list(){
-        vector< vector<int> > v2d;
+    vector< vector<int> > ix_list_;
+    vector<double> terms_signs_;
+
+    void set_ix_list(vector< vector<int> >& v2d){
         vector<int> rowvec;
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
@@ -830,30 +816,23 @@ private:
             for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
             v2d.push_back(rowvec);
         }
-        return v2d;
     }
 
-    vector<double> terms_signs(){
+    void set_terms_signs(vector<double>& signs){
         const double arr[4] = {1., 1., -1., -1.};
-        vector<double> signs (arr, arr + sizeof(arr) / sizeof(int));
-        return signs;
+        for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
     }
 };
 
 template <typename M>
-// ideally this class should be added in a different .h file
 class Gamma2Gamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
-    Gamma2Gamma2ExpSquaredKernel (const long ndim, M* metric)
-      : DerivativeExpSquaredKernel<M>(ndim, metric) {};
+    Gamma2Gamma2ExpSquaredKernel (const long ndim, M* metric);
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
-        const vector< vector<int> > ix_list_v = ix_list();
-
-        vector<double> signs = this->terms_signs();
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list_v, signs);
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_, this->terms_signs_);
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
@@ -861,8 +840,11 @@ public:
     };
 
 private:
-    vector< vector<int> > ix_list(){
-        vector< vector<int> > v2d;
+    vector< vector<int> > ix_list_;
+    vector<double> terms_signs_;
+
+    void set_ix_list(vector< vector<int> >& v2d){
+        // vector< vector<int> > v2d;
         vector<int> rowvec;
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
@@ -876,13 +858,11 @@ private:
             for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
             v2d.push_back(rowvec);
         }
-        return v2d;
     }
 
-    vector<double> terms_signs(){
+    void set_terms_signs(vector<double>& signs){
         const double arr[4] = {1., 1., 1., 1.};
-        vector<double> signs (arr, arr + sizeof(arr) / sizeof(int));
-        return signs;
+        for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
     }
 };
 
@@ -919,6 +899,7 @@ public:
     };
 
   ~GravLensingExpSquaredKernel () {
+
     delete kk_;
     delete kg1_;
     delete kg2_;
@@ -1070,6 +1051,7 @@ public:
         double s = sin(M_PI * (x1[dim_] - x2[dim_]) / period_);
         return exp(-gamma_ * s * s);
     };
+
     void gradient (const double* x1, const double* x2, double* grad) {
         double arg = M_PI * (x1[dim_] - x2[dim_]) / period_,
                s = sin(arg), c = cos(arg), s2 = s * s, A = exp(-gamma_ * s2);
