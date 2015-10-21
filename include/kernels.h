@@ -404,7 +404,11 @@ private:
 template <typename M>
 class DerivativeExpSquaredKernel: public ExpSquaredKernel<M>{
 public:
-    DerivativeExpSquaredKernel (const long ndim, M* metric);
+    DerivativeExpSquaredKernel (const long ndim, M* metric):
+        ExpSquaredKernel<M>(ndim, metric){
+             this->set_termB_ixes(pairs_of_B_ixes_);
+             this->set_termC_ixes(pairs_of_C_ixes_);
+        };
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
@@ -440,7 +444,6 @@ public:
 
 protected:
     // M* metric_;
-    static const int ix_rows = 6, ix_cols = 4;
     vector < vector <int> > pairs_of_B_ixes_;
     vector < vector <int> > pairs_of_C_ixes_;
     vector < vector <int> > comb_B_ixes_;
@@ -532,8 +535,6 @@ protected:
 
     void set_combine_B_ixes(const vector<int> kernel_B_ix){
         // @param B_ix contain the kernel indices, a list of 4 integers
-        // vector< vector<int> > ix = set_termB_ixes();
-        // should not be returned - this should be a member variable 
         unsigned int rows = pairs_of_B_ixes_.size(), cols = pairs_of_B_ixes_[0].size();
         vector<int> temp_row;
 
@@ -611,7 +612,11 @@ protected:
 template <typename M>
 class KappaKappaExpSquaredKernel: public DerivativeExpSquaredKernel<M>{
 public:
-    KappaKappaExpSquaredKernel (const long ndim, M* metric);
+    KappaKappaExpSquaredKernel (const long ndim, M* metric):
+       DerivativeExpSquaredKernel<M>(ndim, metric){
+           this->set_ix_list(this->ix_list_);
+           this->set_terms_signs(this->terms_signs_);
+       };
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
@@ -629,6 +634,7 @@ private:
     vector<double> terms_signs_;
 
     void set_ix_list(vector < vector<int> >& v2d){
+        // could have used a 2D array for this
         vector<int> rowvec;
         const int rows = 4, cols = 4;
         int arr[rows][cols] = {{0, 0, 0, 0},
@@ -653,7 +659,11 @@ private:
 template <typename M>
 class KappaGamma1ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
-    KappaGamma1ExpSquaredKernel (const long ndim, M* metric);
+    KappaGamma1ExpSquaredKernel (const long ndim, M* metric):
+       DerivativeExpSquaredKernel<M>(ndim, metric){
+           this->set_ix_list(this->ix_list_);
+           this->set_terms_signs(this->terms_signs_);
+       };
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
@@ -696,7 +706,11 @@ private:
 template <typename M>
 class KappaGamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
-    KappaGamma2ExpSquaredKernel (const long ndim, M* metric);
+    KappaGamma2ExpSquaredKernel (const long ndim, M* metric):
+       DerivativeExpSquaredKernel<M>(ndim, metric){
+           this->set_ix_list(this->ix_list_);
+           this->set_terms_signs(this->terms_signs_);
+       };
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
@@ -740,7 +754,11 @@ private:
 template <typename M>
 class Gamma1Gamma1ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
-    Gamma1Gamma1ExpSquaredKernel (const long ndim, M* metric);
+    Gamma1Gamma1ExpSquaredKernel (const long ndim, M* metric):
+       DerivativeExpSquaredKernel<M>(ndim, metric){
+           this->set_ix_list(this->ix_list_);
+           this->set_terms_signs(this->terms_signs_);
+       };
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
@@ -782,7 +800,12 @@ private:
 template <typename M>
 class Gamma1Gamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
-    Gamma1Gamma2ExpSquaredKernel (const long ndim, M* metric);
+    Gamma1Gamma2ExpSquaredKernel (const long ndim, M* metric):
+       DerivativeExpSquaredKernel<M>(ndim, metric){
+           this->set_ix_list(this->ix_list_);
+           this->set_terms_signs(this->terms_signs_);
+       };
+
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
@@ -827,7 +850,11 @@ private:
 template <typename M>
 class Gamma2Gamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
-    Gamma2Gamma2ExpSquaredKernel (const long ndim, M* metric);
+    Gamma2Gamma2ExpSquaredKernel (const long ndim, M* metric):
+       DerivativeExpSquaredKernel<M>(ndim, metric){
+           this->set_ix_list(this->ix_list_);
+           this->set_terms_signs(this->terms_signs_);
+       };
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
