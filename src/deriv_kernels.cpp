@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <iostream>
 #include "metrics.h"
 #include "deriv_kernels.h"
@@ -90,6 +91,7 @@ double DerivativeExpSquaredKernel<M>::X(const double* x1, const double* x2, cons
 
 template <typename M>
 void DerivativeExpSquaredKernel<M>::set_termB_ixes(vector <vector <int> >& v2d){
+    v2d.clear();  // this sets v2d to be an empty vector
     unsigned int r, c;
     vector<int> rowvector;
     const int rows = 6, cols = 4;
@@ -106,10 +108,13 @@ void DerivativeExpSquaredKernel<M>::set_termB_ixes(vector <vector <int> >& v2d){
         for (c = 0; c < cols; c++ ) { rowvector.push_back(arr[r][c]); }
         v2d.push_back(rowvector);
     }
+    cout << "termB rows = " << v2d.size() << endl;
+    cout << "termB cols = " << v2d[0].size() << endl;
 }
 
 template <typename M>
 void DerivativeExpSquaredKernel<M>::set_termC_ixes(vector <vector <int> >& v2d){
+    v2d.clear();   // this clears all elements in v2d
     unsigned int r, c;
     vector<int> rowvector;
     const int rows = 3, cols = 4;
@@ -123,13 +128,15 @@ void DerivativeExpSquaredKernel<M>::set_termC_ixes(vector <vector <int> >& v2d){
         for (c = 0; c < cols; c++ ) { rowvector.push_back(arr[r][c]); }
         v2d.push_back(rowvector);
     }
+    cout << "termC rows = " << v2d.size() << endl;
+    cout << "termC cols = " << v2d[0].size() << endl;
 }
 
 template <typename M>
-double DerivativeExpSquaredKernel<M>::termA(const double* x1, const double* x2, vector<int> ix) {
+double DerivativeExpSquaredKernel<M>::termA(const double* x1, const double* x2, const vector<int> ix) {
     double term = 1.;
-    for (vector<int>::iterator it=ix.begin(); it != ix.end(); ++it){
-        term *= this->X(x1, x2, *it);
+    for (unsigned int i=0; i < ix.size(); i++){
+        term *= this->X(x1, x2, ix[i]);
     }
     return term;
 }
@@ -165,32 +172,41 @@ double DerivativeExpSquaredKernel<M>::termC(const vector<int> ix) {
 
 template <typename M>
 void DerivativeExpSquaredKernel<M>::set_combine_B_ixes(const vector<int>& kernel_B_ix){
+    comb_B_ixes_.clear();  // set comb_B_ixes_ to be an empty vector
     unsigned int rows = this->pairs_of_B_ixes_.size(), 
                  cols = this->pairs_of_B_ixes_[0].size();
     vector<int> temp_row;
 
+    cout << "temp row to be added to comb_B_ixes_" << endl;
     for (unsigned int r = 0; r < rows; r++){
         temp_row.clear();
         for (unsigned int c = 0; c < cols; c++){
             temp_row.push_back(kernel_B_ix[pairs_of_B_ixes_[r][c]]);
         }
+        print_1D_vec(temp_row, "temp_row");
         comb_B_ixes_.push_back(temp_row);
     }
-    print_1D_vec(kernel_B_ix, "B_ix");
-    print_2D_vec(comb_B_ixes_, "comb_B_ixes");
+    // print_1D_vec(kernel_B_ix, "B_ix");
+    // print_2D_vec(this->comb_B_ixes_, "comb_B_ixes");
 }
 
 template <typename M>
 void DerivativeExpSquaredKernel<M>::set_combine_C_ixes(const vector<int>& kernel_C_ix){
+    // set comb_C_ixes_ to be an empty vector
+    comb_C_ixes_.clear();
     unsigned int rows = this->pairs_of_C_ixes_.size(), 
                  cols = this->pairs_of_C_ixes_[0].size();
     vector<int> temp_row;
 
+    cout << "temp row to be added to comb_C_ixes_" << endl;
+    cout << "rows to add = " << rows << endl;
+    cout << "cols to add = " << cols << endl;
     for (unsigned int r = 0; r < rows; r++){
         temp_row.clear();
         for (unsigned int c = 0; c < cols; c++){
             temp_row.push_back(kernel_C_ix[pairs_of_C_ixes_[r][c]]);
         }
+        print_1D_vec(temp_row, "temp_row");
         comb_C_ixes_.push_back(temp_row);
     }
     print_1D_vec(kernel_C_ix, "C_ix");
@@ -228,8 +244,8 @@ double DerivativeExpSquaredKernel<M>::compute_Sigma4deriv_matrix(const double* x
         const double* x2, const vector< vector<int> >& ix, const vector<double>& signs){
     double term = 0;
     int rows = ix.size();  // this should be 4
-    this->print_2D_vec(ix, "ix_list");
-    this->print_1D_vec(signs, "terms_signs");
+    // this->print_2D_vec(ix, "ix_list");
+    // this->print_1D_vec(signs, "terms_signs");
 
     for (unsigned int r = 0; r < rows; r++){
         term += signs[r] * this->Sigma4thDeriv(ix[r], x1, x2);
@@ -249,7 +265,7 @@ DerivativeExpSquaredKernel<M>(ndim, metric){
 
 template <typename M>
 void KappaKappaExpSquaredKernel<M>::set_ix_list(vector < vector<int> >& v2d){
-    // could have used a 2D array for this
+    v2d.clear();  // resets v2d 
     vector<int> rowvec;
     const int rows = 4, cols = 4;
     int arr[rows][cols] = {{0, 0, 0, 0},
@@ -654,34 +670,45 @@ double GravLensingExpSquaredKernel<M>::value (const double* x1, const double* x2
     return result;
 }
 
+
+
+TwoDdynamicArray::TwoDdynamicArray(const int& nrow, const int& ncol) : nrow(nrow), ncol(ncol){
+    this->val = new double* [nrow];
+    for (unsigned int row=0; row < nrow; row++) this->val[row] = new double[ncol];
+}
+
+TwoDdynamicArray::~TwoDdynamicArray(){
+    for (unsigned int row=0; row < this->nrow; row++) delete [] this->val[row];
+    delete [] this->val;
+}
+
+void TwoDdynamicArray::create_from_2D_arr(const double pts[][2], const int& nobs){
+    for (unsigned int row=0; row < this->nrow; row++){
+        for (unsigned int col=0; col < this->ncol; col++){
+            this->val[row][col] = pts[row][col];
+            printf("(%d, %d): %f\n", row, col, this->val[row][col]);
+        }
+    }
+}
+
 }; // kernels 
 }; // george 
 
-/*  
-double ** initialize_2D_array(){
-    return stuff;
-}
-
-void destroy_2D_array(){
-    delete
-}
-*/
-
 void test_kappakappa_2_coords_fixed_l_sq(){
     const unsigned int ndim = 2;
-    double gp_length = 0.5;
+    double gp_length = 1.0;
+    const int nobs = 2;
 
-    // declare and fill up coords on the stack
-    // should be of shape (nobs, ndim)
-    const double coords[2][2] = {{1., 4.}, {2., 7.}};
+    double pts[][2] = {{1., 2.}, {4., 7.}};
+    george::kernels::TwoDdynamicArray arr(nobs, ndim);
+    arr.create_from_2D_arr(pts, nobs);
 
     AxisAlignedMetric* metric_kk = new AxisAlignedMetric(ndim);
     metric_kk->set_parameter(1, gp_length);
 
     george::kernels::KappaKappaExpSquaredKernel<AxisAlignedMetric> kk(ndim, metric_kk);
-    // need to figure out how to pass this 
-    // kk.value(&coords, &coords);
-
+    double val = kk.value(arr.val[0], arr.val[1]);
+    cout << "KK value = " << val << endl;
 }
 
 int main(){

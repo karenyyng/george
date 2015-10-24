@@ -372,7 +372,7 @@ protected:
     double X(const double* x1, const double* x2, const int spatial_ix);
     void set_termB_ixes(vector <vector <int> >& v2d);
     void set_termC_ixes(vector <vector <int> >& v2d);
-    double termA(const double* x1, const double* x2, vector<int> ix);
+    double termA(const double* x1, const double* x2, const vector<int> ix);
     double termB(const double* x1, const double* x2, const vector<int> ix); 
     double termC(const vector<int> ix);
     void set_combine_B_ixes(const vector<int>& kernel_B_ix);
@@ -512,8 +512,18 @@ private:
 };
 
 
+class TwoDdynamicArray{
+public:
+    TwoDdynamicArray(const int& nrow, const int& ncol);
+    ~TwoDdynamicArray();
+    void create_from_2D_arr(const double pt[][2], const int& nobs);
+    double** val;
+    const int nrow;
+    const int ncol;
+};
 
 }; // namespace kernels
 }; // namespace george
+
 
 #endif

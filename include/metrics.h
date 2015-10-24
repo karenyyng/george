@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <vector>
+#include <iostream>
 
 using std::vector;
 
@@ -96,9 +97,17 @@ public:
     AxisAlignedMetric (const unsigned int ndim) : Metric(ndim, ndim) {};
 
     double get_squared_distance (const double* x1, const double* x2) const {
+        // Multidimensional numpy arrays are 1D C / C++ arrays contiguous in
+        // memory, along each row (obs).
+        // Both Python and C++ are row-major languages  
+        // data matrix: np.array([[1., 2.,], [4., 7.]) corresponds to a 
+        // C++ array of {1., 2.} or {4., 7.} 
         unsigned int i;
         double d, r2 = 0.0;
+        // std::cout << "get_squared_distance" << std::endl;
         for (i = 0; i < ndim_; ++i) {
+            // std::cout << "x1[" << i << "] = " << x1[i] << std::endl;
+            // std::cout << "x2[" << i << "] = " << x2[i] << std::endl;
             d = x1[i] - x2[i];
             r2 += d * d / this->vector_[i];
         }

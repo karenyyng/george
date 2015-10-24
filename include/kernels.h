@@ -481,6 +481,7 @@ protected:
     }
 
     void set_termB_ixes(vector <vector <int> >& v2d){
+        v2d.clear();  // v2d is set to be an empty vector; 
         unsigned int r, c;
         vector<int> rowvector;
         const int rows = 6, cols = 4;
@@ -500,6 +501,7 @@ protected:
     }
 
     void set_termC_ixes(vector <vector <int> >& v2d){
+        v2d.clear();  // v2d is set to be an empty vector; 
         unsigned int r, c;
         vector<int> rowvector;
         const int rows = 3, cols = 4;
@@ -515,10 +517,10 @@ protected:
         }
     }
 
-    double termA(const double* x1, const double* x2, vector<int> ix) {
+    double termA(const double* x1, const double* x2, const vector<int> ix) {
         double term = 1.;
-        for (vector<int>::iterator it=ix.begin(); it != ix.end(); ++it){
-            term *= this->X(x1, x2, *it);
+        for (unsigned int i=0; i < ix.size(); i++){
+            term *= this->X(x1, x2, ix[i]);
         }
         return term;
     }
@@ -551,6 +553,7 @@ protected:
     }
 
     void set_combine_B_ixes(const vector<int>& kernel_B_ix){
+        comb_B_ixes_.clear();  // comb_B_ixes_ is set to be an empty vector; 
         unsigned int rows = this->pairs_of_B_ixes_.size(), 
                      cols = this->pairs_of_B_ixes_[0].size();
         vector<int> temp_row;
@@ -562,11 +565,12 @@ protected:
             }
             comb_B_ixes_.push_back(temp_row);
         }
-        print_1D_vec(kernel_B_ix, "B_ix");
-        print_2D_vec(comb_B_ixes_, "comb_B_ixes");
+        // print_1D_vec(kernel_B_ix, "B_ix");
+        // print_2D_vec(comb_B_ixes_, "comb_B_ixes");
     }
 
     void set_combine_C_ixes(const vector<int>& kernel_C_ix){
+        comb_C_ixes_.clear();  // comb_C_ixes_ is set to be an empty vector; 
         unsigned int rows = this->pairs_of_C_ixes_.size(), 
                      cols = this->pairs_of_C_ixes_[0].size();
         vector<int> temp_row;
@@ -578,8 +582,8 @@ protected:
             }
             comb_C_ixes_.push_back(temp_row);
         }
-        print_1D_vec(kernel_C_ix, "C_ix");
-        print_2D_vec(comb_C_ixes_, "comb_C_ixes");
+        // print_1D_vec(kernel_C_ix, "C_ix");
+        // print_2D_vec(comb_C_ixes_, "comb_C_ixes");
     }
 
     double Sigma4thDeriv(const vector<int>& ix, const double* x1, const double* x2){
@@ -610,15 +614,14 @@ protected:
 
 
     double compute_Sigma4deriv_matrix(const double* x1, const double* x2,
-                                      const vector< vector<int> >& ix,
-                                      const vector<double>& signs){
+                                      const vector< vector<int> >& ix_list,
+                                      const vector<double>& terms_signs){
         double term = 0;
-        int rows = ix.size();  // this should be 4
-        this->print_2D_vec(ix, "ix_list");
-        this->print_1D_vec(signs, "terms_signs");
+        // this->print_2D_vec(ix_list, "ix_list");
+        // this->print_1D_vec(signs, "terms_signs");
 
-        for (unsigned int r = 0; r < rows; r++){
-            term += signs[r] * this->Sigma4thDeriv(ix[r], x1, x2);
+        for (unsigned int r = 0; r < ix_list.size(); r++){
+            term += terms_signs[r] * this->Sigma4thDeriv(ix_list[r], x1, x2);
         }
         return term;
     }
@@ -629,15 +632,15 @@ class KappaKappaExpSquaredKernel: public DerivativeExpSquaredKernel<M>{
 public:
     KappaKappaExpSquaredKernel (const long ndim, M* metric):
        DerivativeExpSquaredKernel<M>(ndim, metric){
-           this->set_ix_list(ix_list_);
-           this->set_terms_signs(terms_signs_);
+           this->set_ix_list(this->ix_list_);
+           this->set_terms_signs(this->terms_signs_);
        };
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list_, 
-                                               terms_signs_);
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_, 
+                                               this->terms_signs_);
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
@@ -677,8 +680,8 @@ class KappaGamma1ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
     KappaGamma1ExpSquaredKernel (const long ndim, M* metric):
        DerivativeExpSquaredKernel<M>(ndim, metric){
-           this->set_ix_list(ix_list_);
-           this->set_terms_signs(terms_signs_);
+           this->set_ix_list(this->ix_list_);
+           this->set_terms_signs(this->terms_signs_);
        };
 
     using Kernel::value;
@@ -725,8 +728,8 @@ class KappaGamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
     KappaGamma2ExpSquaredKernel (const long ndim, M* metric):
        DerivativeExpSquaredKernel<M>(ndim, metric){
-           this->set_ix_list(ix_list_);
-           this->set_terms_signs(terms_signs_);
+           this->set_ix_list(this->ix_list_);
+           this->set_terms_signs(this->terms_signs_);
        };
 
     using Kernel::value;
@@ -773,8 +776,8 @@ class Gamma1Gamma1ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
     Gamma1Gamma1ExpSquaredKernel (const long ndim, M* metric):
        DerivativeExpSquaredKernel<M>(ndim, metric){
-           this->set_ix_list(ix_list_);
-           this->set_terms_signs(terms_signs_);
+           this->set_ix_list(this->ix_list_);
+           this->set_terms_signs(this->terms_signs_);
        };
 
     using Kernel::value;
@@ -820,8 +823,8 @@ class Gamma1Gamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
     Gamma1Gamma2ExpSquaredKernel (const long ndim, M* metric):
        DerivativeExpSquaredKernel<M>(ndim, metric){
-           this->set_ix_list(ix_list_);
-           this->set_terms_signs(terms_signs_);
+           this->set_ix_list(this->ix_list_);
+           this->set_terms_signs(this->terms_signs_);
 
        };
 
