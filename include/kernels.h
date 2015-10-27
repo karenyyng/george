@@ -498,7 +498,6 @@ protected:
             for (c = 0; c < cols; c++ ) { rowvector.push_back(arr[r][c]); }
             v2d.push_back(rowvector);
         }
-        cout << "Should appear 1 time: calling set_termB_ixes" << endl;
     }
 
     void set_termC_ixes(vector <vector <int> >& v2d){
@@ -516,7 +515,6 @@ protected:
             for (c = 0; c < cols; c++ ) { rowvector.push_back(arr[r][c]); }
             v2d.push_back(rowvector);
         }
-        cout << "Should appear 1 time: calling set_termC_ixes" << endl;
     }
 
     double termA(const double* x1, const double* x2, const vector<int> ix) {
@@ -582,7 +580,6 @@ protected:
             }
             comb_C_ixes_.push_back(temp_row);
         }
-        cout << "no. of rows of comb_C_ixes_ = " << comb_C_ixes_.size() << endl;
         // print_1D_vec(kernel_C_ix, "C_ix");
         // print_2D_vec(comb_C_ixes_, "comb_C_ixes");
     }
@@ -651,15 +648,7 @@ public:
            for (unsigned int r = 0; r < this->ix_list_.size(); r++){
                // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
                this->set_combine_B_ixes(this->ix_list_[r]);
-
-               cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
-               cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
-               cout << endl;
-
                this->set_combine_C_ixes(this->ix_list_[r]);
-               cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
-               cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
-               cout << endl;
            }
        };
 
@@ -715,15 +704,7 @@ public:
            for (unsigned int r = 0; r < this->ix_list_.size(); r++){
                // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
                this->set_combine_B_ixes(this->ix_list_[r]);
-
-               cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
-               cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
-               cout << endl;
-
                this->set_combine_C_ixes(this->ix_list_[r]);
-               cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
-               cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
-               cout << endl;
            }
        };
 
@@ -779,15 +760,7 @@ public:
            for (unsigned int r = 0; r < this->ix_list_.size(); r++){
                // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
                this->set_combine_B_ixes(this->ix_list_[r]);
-
-               cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
-               cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
-               cout << endl;
-
                this->set_combine_C_ixes(this->ix_list_[r]);
-               cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
-               cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
-               cout << endl;
            }
        };
 
@@ -844,16 +817,7 @@ public:
            for (unsigned int r = 0; r < this->ix_list_.size(); r++){
                // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
                this->set_combine_B_ixes(this->ix_list_[r]);
-
-               cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
-               cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
-               cout << endl;
-
                this->set_combine_C_ixes(this->ix_list_[r]);
-               cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
-               cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
-               cout << endl;
-
            }
        };
 
@@ -908,15 +872,7 @@ public:
            for (unsigned int r = 0; r < this->ix_list_.size(); r++){
                // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
                this->set_combine_B_ixes(this->ix_list_[r]);
-
-               cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
-               cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
-               cout << endl;
-
                this->set_combine_C_ixes(this->ix_list_[r]);
-               cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
-               cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
-               cout << endl;
            }
        };
 
@@ -972,15 +928,7 @@ public:
            for (unsigned int r = 0; r < this->ix_list_.size(); r++){
                // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
                this->set_combine_B_ixes(this->ix_list_[r]);
-
-               cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
-               cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
-               cout << endl;
-
                this->set_combine_C_ixes(this->ix_list_[r]);
-               cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
-               cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
-               cout << endl;
            }
        };
 
