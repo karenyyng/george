@@ -498,6 +498,7 @@ protected:
             for (c = 0; c < cols; c++ ) { rowvector.push_back(arr[r][c]); }
             v2d.push_back(rowvector);
         }
+        cout << "Should appear 1 time: calling set_termB_ixes" << endl;
     }
 
     void set_termC_ixes(vector <vector <int> >& v2d){
@@ -515,6 +516,7 @@ protected:
             for (c = 0; c < cols; c++ ) { rowvector.push_back(arr[r][c]); }
             v2d.push_back(rowvector);
         }
+        cout << "Should appear 1 time: calling set_termC_ixes" << endl;
     }
 
     double termA(const double* x1, const double* x2, const vector<int> ix) {
@@ -553,7 +555,6 @@ protected:
     }
 
     void set_combine_B_ixes(const vector<int>& kernel_B_ix){
-        comb_B_ixes_.clear();  // comb_B_ixes_ is set to be an empty vector; 
         unsigned int rows = this->pairs_of_B_ixes_.size(), 
                      cols = this->pairs_of_B_ixes_[0].size();
         vector<int> temp_row;
@@ -570,7 +571,6 @@ protected:
     }
 
     void set_combine_C_ixes(const vector<int>& kernel_C_ix){
-        comb_C_ixes_.clear();  // comb_C_ixes_ is set to be an empty vector; 
         unsigned int rows = this->pairs_of_C_ixes_.size(), 
                      cols = this->pairs_of_C_ixes_[0].size();
         vector<int> temp_row;
@@ -582,28 +582,42 @@ protected:
             }
             comb_C_ixes_.push_back(temp_row);
         }
+        cout << "set_combine_C_ixes is called\n";
+        cout << "no. of rows of comb_C_ixes_ = " << comb_C_ixes_.size() << endl;
         // print_1D_vec(kernel_C_ix, "C_ix");
         // print_2D_vec(comb_C_ixes_, "comb_C_ixes");
     }
 
-    double Sigma4thDeriv(const vector<int>& ix, const double* x1, const double* x2){
+    double Sigma4thDeriv(const int r, const vector<int> ix, const double* x1, const double* x2){
         double allTermBs = 0.;
         double allTermCs = 0.;
-        this->set_combine_B_ixes(ix);
-        this->set_combine_C_ixes(ix);
+        
+        int row; 
+        const int b_row_begin = r * 6; 
+        const int b_row_end = b_row_begin + 6;
 
+        const int c_row_begin = r * 3; 
+        const int c_row_end = c_row_begin + 3;
+        
         double termA_val = termA(x1, x2, ix);
 
-        for (vector< vector<int> >::iterator row_it = this->comb_B_ixes_.begin();
-           row_it < this->comb_B_ixes_.end(); ++row_it ){
-           allTermBs += termB(x1, x2, *row_it);
+        for (row = b_row_begin; row < b_row_end; row++){
+            allTermBs += termB(x1, x2, comb_B_ixes_[row]);
         }
 
-        for (vector< vector<int> >::iterator row_it = this->comb_C_ixes_.begin();
-           row_it < this->comb_C_ixes_.end(); ++row_it ){
-           allTermCs += termC(*row_it);
+        for (row = c_row_begin; row < c_row_end; row++){
+            allTermCs += termC(comb_C_ixes_[row]);
         }
 
+        // for (vector< vector<int> >::iterator row_it = this->comb_B_ixes_.begin();
+        //    row_it < this->comb_B_ixes_.end(); ++row_it ){
+        //    allTermBs += termB(x1, x2, *row_it);
+        // }
+
+        // for (vector< vector<int> >::iterator row_it = this->comb_C_ixes_.begin();
+        //    row_it < this->comb_C_ixes_.end(); ++row_it ){
+        //    allTermCs += termC(*row_it);
+        // }
 
         // printf ("combined terms in Sigma4thDeriv = %.2f \n",
         //        (termA - allTermBs + allTermCs) / 4.);
@@ -621,7 +635,7 @@ protected:
         // this->print_1D_vec(signs, "terms_signs");
 
         for (unsigned int r = 0; r < ix_list.size(); r++){
-            term += terms_signs[r] * this->Sigma4thDeriv(ix_list[r], x1, x2);
+            term += terms_signs[r] * this->Sigma4thDeriv(r, ix_list[r], x1, x2);
         }
         return term;
     }
@@ -634,6 +648,18 @@ public:
        DerivativeExpSquaredKernel<M>(ndim, metric){
            this->set_ix_list(this->ix_list_);
            this->set_terms_signs(this->terms_signs_);
+
+           for (unsigned int r = 0; r < this->ix_list_.size(); r++){
+               // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
+               this->set_combine_B_ixes(this->ix_list_[r]);
+
+               cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
+               cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
+
+               this->set_combine_C_ixes(this->ix_list_[r]);
+               cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
+               cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
+           }
        };
 
     using Kernel::value;
@@ -653,6 +679,7 @@ private:
     vector<double> terms_signs_;
 
     void set_ix_list(vector < vector<int> >& v2d){
+        v2d.clear();  // set v2d to be empty 
         // could have used a 2D array for this
         vector<int> rowvec;
         const int rows = 4, cols = 4;
@@ -669,6 +696,7 @@ private:
     }
 
     void set_terms_signs(vector<double>& signs){
+        signs.clear();  // set v2d to be empty 
         const double arr[4] = {1., 1., 1., 1.};
         for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
     }
@@ -682,6 +710,18 @@ public:
        DerivativeExpSquaredKernel<M>(ndim, metric){
            this->set_ix_list(this->ix_list_);
            this->set_terms_signs(this->terms_signs_);
+
+           for (unsigned int r = 0; r < this->ix_list_.size(); r++){
+               // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
+               this->set_combine_B_ixes(this->ix_list_[r]);
+
+               cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
+               cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
+
+               this->set_combine_C_ixes(this->ix_list_[r]);
+               cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
+               cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
+           }
        };
 
     using Kernel::value;
@@ -702,6 +742,7 @@ private:
     vector<double> terms_signs_;
 
     void set_ix_list(vector< vector<int> >& v2d){
+        v2d.clear();  // set v2d to be empty 
         vector<int> rowvec;
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
@@ -718,6 +759,7 @@ private:
     }
 
     void set_terms_signs(vector<double>& signs){
+        signs.clear();  // set v2d to be empty 
         const double arr[4] = {1., -1., 1., -1.};
         for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
     }
@@ -730,6 +772,18 @@ public:
        DerivativeExpSquaredKernel<M>(ndim, metric){
            this->set_ix_list(this->ix_list_);
            this->set_terms_signs(this->terms_signs_);
+
+           for (unsigned int r = 0; r < this->ix_list_.size(); r++){
+               // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
+               this->set_combine_B_ixes(this->ix_list_[r]);
+
+               cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
+               cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
+
+               this->set_combine_C_ixes(this->ix_list_[r]);
+               cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
+               cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
+           }
        };
 
     using Kernel::value;
@@ -750,6 +804,8 @@ private:
     vector<double> terms_signs_;
 
     void set_ix_list(vector< vector<int> >& v2d){
+        v2d.clear();
+
         vector<int> rowvec;
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
@@ -766,6 +822,7 @@ private:
     }
 
     void set_terms_signs(vector<double>& signs){
+        signs.clear();
         const double arr[4] = {1., 1., 1., 1.};
         for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
     }
@@ -778,6 +835,18 @@ public:
        DerivativeExpSquaredKernel<M>(ndim, metric){
            this->set_ix_list(this->ix_list_);
            this->set_terms_signs(this->terms_signs_);
+
+           for (unsigned int r = 0; r < this->ix_list_.size(); r++){
+               // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
+               this->set_combine_B_ixes(this->ix_list_[r]);
+
+               cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
+               cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
+
+               this->set_combine_C_ixes(this->ix_list_[r]);
+               cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
+               cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
+           }
        };
 
     using Kernel::value;
@@ -797,6 +866,7 @@ private:
     vector<double> terms_signs_;
 
     void set_ix_list(vector< vector<int> >& v2d){
+        v2d.clear();
         vector<int> rowvec;
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
@@ -813,6 +883,7 @@ private:
     }
 
     void set_terms_signs(vector<double>& signs){
+        signs.clear();
         const double arr[4] = {1., -1., -1., 1.};
         for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
     }
@@ -826,6 +897,17 @@ public:
            this->set_ix_list(this->ix_list_);
            this->set_terms_signs(this->terms_signs_);
 
+           for (unsigned int r = 0; r < this->ix_list_.size(); r++){
+               // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
+               this->set_combine_B_ixes(this->ix_list_[r]);
+
+               cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
+               cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
+
+               this->set_combine_C_ixes(this->ix_list_[r]);
+               cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
+               cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
+           }
        };
 
 
@@ -846,6 +928,7 @@ private:
     vector<double> terms_signs_;
 
     void set_ix_list(vector< vector<int> >& v2d){
+        v2d.clear();
         vector<int> rowvec;
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
@@ -862,6 +945,7 @@ private:
     }
 
     void set_terms_signs(vector<double>& signs){
+        signs.clear();
         const double arr[4] = {1., 1., -1., -1.};
         for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
     }
@@ -874,6 +958,18 @@ public:
        DerivativeExpSquaredKernel<M>(ndim, metric){
            this->set_ix_list(this->ix_list_);
            this->set_terms_signs(this->terms_signs_);
+
+           for (unsigned int r = 0; r < this->ix_list_.size(); r++){
+               // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
+               this->set_combine_B_ixes(this->ix_list_[r]);
+
+               cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
+               cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
+
+               this->set_combine_C_ixes(this->ix_list_[r]);
+               cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
+               cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
+           }
        };
 
     using Kernel::value;
@@ -891,7 +987,7 @@ private:
     vector<double> terms_signs_;
 
     void set_ix_list(vector< vector<int> >& v2d){
-        // vector< vector<int> > v2d;
+        v2d.clear();
         vector<int> rowvec;
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
@@ -908,6 +1004,7 @@ private:
     }
 
     void set_terms_signs(vector<double>& signs){
+        signs.clear();
         const double arr[4] = {1., 1., 1., 1.};
         for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
     }
