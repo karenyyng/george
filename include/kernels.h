@@ -582,7 +582,6 @@ protected:
             }
             comb_C_ixes_.push_back(temp_row);
         }
-        cout << "set_combine_C_ixes is called\n";
         cout << "no. of rows of comb_C_ixes_ = " << comb_C_ixes_.size() << endl;
         // print_1D_vec(kernel_C_ix, "C_ix");
         // print_2D_vec(comb_C_ixes_, "comb_C_ixes");
@@ -655,10 +654,12 @@ public:
 
                cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
                cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
+               cout << endl;
 
                this->set_combine_C_ixes(this->ix_list_[r]);
                cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
                cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
+               cout << endl;
            }
        };
 
@@ -717,10 +718,12 @@ public:
 
                cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
                cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
+               cout << endl;
 
                this->set_combine_C_ixes(this->ix_list_[r]);
                cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
                cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
+               cout << endl;
            }
        };
 
@@ -779,10 +782,12 @@ public:
 
                cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
                cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
+               cout << endl;
 
                this->set_combine_C_ixes(this->ix_list_[r]);
                cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
                cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
+               cout << endl;
            }
        };
 
@@ -842,10 +847,13 @@ public:
 
                cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
                cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
+               cout << endl;
 
                this->set_combine_C_ixes(this->ix_list_[r]);
                cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
                cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
+               cout << endl;
+
            }
        };
 
@@ -903,10 +911,12 @@ public:
 
                cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
                cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
+               cout << endl;
 
                this->set_combine_C_ixes(this->ix_list_[r]);
                cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
                cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
+               cout << endl;
            }
        };
 
@@ -965,10 +975,12 @@ public:
 
                cout << "set_combine_B_ixes is called for the " << r << "-th time \n";
                cout << "no. of rows of comb_B_ixes_ = " << this->comb_B_ixes_.size() << endl;
+               cout << endl;
 
                this->set_combine_C_ixes(this->ix_list_[r]);
                cout << "set_combine_C_ixes is called for the " << r << "-th time \n";
                cout << "no. of rows of comb_C_ixes_ = " << this->comb_C_ixes_.size() << endl;
+               cout << endl;
            }
        };
 
