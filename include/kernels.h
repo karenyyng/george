@@ -573,7 +573,6 @@ protected:
         unsigned int rows = this->pairs_of_C_ixes_.size(), 
                      cols = this->pairs_of_C_ixes_[0].size();
         vector<int> temp_row(4);
-        vector< vector <int> > comb_C_ixes_; 
         comb_C_ixes_.reserve(12);
 
         for (unsigned int r = 0; r < rows; r++){
