@@ -670,19 +670,25 @@ double GravLensingExpSquaredKernel<M>::value (const double* x1, const double* x2
     return result;
 }
 
-
-
+// constructor 
 TwoDdynamicArray::TwoDdynamicArray(const int& nrow, const int& ncol) : nrow(nrow), ncol(ncol){
+    // There is a certain number of `new` in this constructor.
+    // There MUST be the same number of `delete` statements in the destructor.
     this->val = new double* [nrow];
     for (unsigned int row=0; row < nrow; row++) this->val[row] = new double[ncol];
 }
 
+
+
+// destructor 
 TwoDdynamicArray::~TwoDdynamicArray(){
     for (unsigned int row=0; row < this->nrow; row++) delete [] this->val[row];
     delete [] this->val;
 }
 
+// initialize empty 2D array 
 void TwoDdynamicArray::create_from_2D_arr(const double pts[][2], const int& nobs){
+
     for (unsigned int row=0; row < this->nrow; row++){
         for (unsigned int col=0; col < this->ncol; col++){
             this->val[row][col] = pts[row][col];
