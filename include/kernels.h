@@ -481,10 +481,12 @@ protected:
     }
 
     void set_termB_ixes(vector <vector <int> >& v2d){
-        v2d.clear();  // v2d is set to be an empty vector; 
         unsigned int r, c;
-        vector<int> rowvector;
         const int rows = 6, cols = 4;
+
+        // reserve vectors
+        vector<int> rowvector(4);
+        v2d.reserve(rows);
 
         int arr[rows][cols] = {{0, 1, 2, 3},
                                {0, 2, 1, 3},
@@ -494,25 +496,25 @@ protected:
                                {1, 2, 0, 3}};
 
         for (r = 0; r < rows; r++) {
-            rowvector.clear();
-            for (c = 0; c < cols; c++ ) { rowvector.push_back(arr[r][c]); }
+            for (c = 0; c < cols; c++ ) { rowvector[c] = arr[r][c]; }
             v2d.push_back(rowvector);
         }
     }
 
     void set_termC_ixes(vector <vector <int> >& v2d){
-        v2d.clear();  // v2d is set to be an empty vector; 
         unsigned int r, c;
-        vector<int> rowvector;
         const int rows = 3, cols = 4;
+
+        // reserve memory for vectors 
+        vector<int> rowvector(4);
+        v2d.reserve(rows);
 
         int arr[rows][cols] = {{0, 1, 2, 3},
                                {0, 2, 1, 3},
                                {0, 3, 1, 2}};
 
         for (r = 0; r < rows; r++) {
-            rowvector.clear();
-            for (c = 0; c < cols; c++ ) { rowvector.push_back(arr[r][c]); }
+            for (c = 0; c < cols; c++) { rowvector[c] = arr[r][c]; }
             v2d.push_back(rowvector);
         }
     }
@@ -525,8 +527,7 @@ protected:
         return term;
     }
 
-    double termB(const double* x1, const double* x2,
-                 const vector<int> ix) {
+    double termB(const double* x1, const double* x2, const vector<int> ix) {
         /* l_sq fixed  */
         if (ix[2] != ix[3]) { return 0; }
 
@@ -555,13 +556,12 @@ protected:
     void set_combine_B_ixes(const vector<int>& kernel_B_ix){
         unsigned int rows = this->pairs_of_B_ixes_.size(), 
                      cols = this->pairs_of_B_ixes_[0].size();
-        vector<int> temp_row(4);
+        vector<int> temp_row(cols);
         comb_B_ixes_.reserve(24);
 
         for (unsigned int r = 0; r < rows; r++){
-            temp_row.clear();
             for (unsigned int c = 0; c < cols; c++){
-                temp_row.push_back(kernel_B_ix[pairs_of_B_ixes_[r][c]]);
+                temp_row[c] = kernel_B_ix[pairs_of_B_ixes_[r][c]];
             }
             comb_B_ixes_.push_back(temp_row);
         }
@@ -572,13 +572,12 @@ protected:
     void set_combine_C_ixes(const vector<int>& kernel_C_ix){
         unsigned int rows = this->pairs_of_C_ixes_.size(), 
                      cols = this->pairs_of_C_ixes_[0].size();
-        vector<int> temp_row(4);
+        vector<int> temp_row(cols);
         comb_C_ixes_.reserve(12);
 
         for (unsigned int r = 0; r < rows; r++){
-            temp_row.clear();
             for (unsigned int c = 0; c < cols; c++){
-                temp_row.push_back(kernel_C_ix[pairs_of_C_ixes_[r][c]]);
+                temp_row[c] = kernel_C_ix[pairs_of_C_ixes_[r][c]];
             }
             comb_C_ixes_.push_back(temp_row);
         }
@@ -613,7 +612,6 @@ protected:
         // for getting each term  so we don't have to multiply beta again.
         return (termA_val - allTermBs + allTermCs) / 4.;
     }
-
 
     double compute_Sigma4deriv_matrix(const double* x1, const double* x2,
                                       const vector< vector<int> >& ix_list,
@@ -661,26 +659,27 @@ private:
     vector<double> terms_signs_;
 
     void set_ix_list(vector < vector<int> >& v2d){
-        v2d.clear();  // set v2d to be empty 
         // could have used a 2D array for this
-        vector<int> rowvec;
         const int rows = 4, cols = 4;
         int arr[rows][cols] = {{0, 0, 0, 0},
                                {0, 0, 1, 1},
                                {1, 1, 0, 0},
                                {1, 1, 1, 1}};
 
+        vector<int> rowvec(cols);
+        v2d.reserve(rows);
+
         for (unsigned int r = 0; r < rows; r++){
-            rowvec.clear();
-            for (unsigned int c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
+            for (unsigned int c = 0; c < cols; c++){ rowvec[c] = arr[r][c]; }
             v2d.push_back(rowvec);
         }
     }
 
     void set_terms_signs(vector<double>& signs){
-        signs.clear();  // set v2d to be empty 
+        // reserve memory for vectors 
+        signs.reserve(4);
         const double arr[4] = {1., 1., 1., 1.};
-        for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
+        for (unsigned int c = 0; c < 4; c++){ signs[c] = arr[c]; }
     }
 
 };
@@ -718,26 +717,26 @@ private:
     vector<double> terms_signs_;
 
     void set_ix_list(vector< vector<int> >& v2d){
-        v2d.clear();  // set v2d to be empty 
-        vector<int> rowvec;
-        unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
         int arr[rows][cols] = {{0, 0, 0, 0},
                                {0, 0, 1, 1},
                                {1, 1, 0, 0},
                                {1, 1, 1, 1}};
 
+        vector<int> rowvec(cols);
+        v2d.reserve(rows);
+
+        unsigned int r = 0, c = 0;
         for (r = 0; r < rows; r++){
-            rowvec.clear();
-            for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
+            for (c = 0; c < cols; c++){ rowvec[c] = arr[r][c]; }
             v2d.push_back(rowvec);
         }
     }
 
     void set_terms_signs(vector<double>& signs){
-        signs.clear();  // set v2d to be empty 
+        signs.reserve(4);
         const double arr[4] = {1., -1., 1., -1.};
-        for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
+        for (unsigned int c = 0; c < 4; c++){ signs[c] = arr[c]; }
     }
 };
 
@@ -774,27 +773,27 @@ private:
     vector<double> terms_signs_;
 
     void set_ix_list(vector< vector<int> >& v2d){
-        v2d.clear();
-
-        vector<int> rowvec;
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
+
+        vector<int> rowvec(cols);
+        v2d.reserve(rows);
+
         int arr[rows][cols] = {{0, 0, 0, 1},
                                {0, 0, 1, 0},
                                {1, 1, 0, 1},
                                {1, 1, 1, 0}};
 
         for (r = 0; r < rows; r++){
-            rowvec.clear();
-            for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
+            for (c = 0; c < cols; c++){ rowvec[c] = arr[r][c]; }
             v2d.push_back(rowvec);
         }
     }
 
     void set_terms_signs(vector<double>& signs){
-        signs.clear();
+        signs.reserve(4);
         const double arr[4] = {1., 1., 1., 1.};
-        for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
+        for (unsigned int c = 0; c < 4; c++){ signs[c] = arr[c]; }
     }
 };
 
@@ -830,26 +829,27 @@ private:
     vector<double> terms_signs_;
 
     void set_ix_list(vector< vector<int> >& v2d){
-        v2d.clear();
-        vector<int> rowvec;
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
+
+        vector<int> rowvec(cols);
+        v2d.reserve(rows);
+
         int arr[rows][cols] = {{0, 0, 0, 0},
                                {0, 0, 1, 1},
                                {1, 1, 0, 0},
                                {1, 1, 1, 1}};
 
         for (r = 0; r < rows; r++){
-            rowvec.clear();
-            for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
+            for (c = 0; c < cols; c++){ rowvec[c] = arr[r][c]; }
             v2d.push_back(rowvec);
         }
     }
 
     void set_terms_signs(vector<double>& signs){
-        signs.clear();
+        signs.reserve(4);
         const double arr[4] = {1., -1., -1., 1.};
-        for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
+        for (unsigned int c = 0; c < 4; c++){ signs[c] = arr[c]; }
     }
 };
 
@@ -886,26 +886,27 @@ private:
     vector<double> terms_signs_;
 
     void set_ix_list(vector< vector<int> >& v2d){
-        v2d.clear();
-        vector<int> rowvec;
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
+
+        vector<int> rowvec(cols);
+        v2d.reserve(rows);
+
         int arr[rows][cols] = {{0, 0, 0, 1},
                                {0, 0, 1, 0},
                                {1, 1, 0, 1},
                                {1, 1, 1, 0}};
 
         for (r = 0; r < rows; r++){
-            rowvec.clear();
-            for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
+            for (c = 0; c < cols; c++){ rowvec[c] = arr[r][c]; }
             v2d.push_back(rowvec);
         }
     }
 
     void set_terms_signs(vector<double>& signs){
-        signs.clear();
+        signs.reserve(4);
         const double arr[4] = {1., 1., -1., -1.};
-        for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
+        for (unsigned int c = 0; c < 4; c++){ signs[c] = arr[c]; }
     }
 };
 
@@ -939,26 +940,27 @@ private:
     vector<double> terms_signs_;
 
     void set_ix_list(vector< vector<int> >& v2d){
-        v2d.clear();
-        vector<int> rowvec;
         unsigned int r = 0, c = 0;
         const int rows = 4, cols = 4;
+
+        vector<int> rowvec(cols);
+        v2d.reserve(rows);
+
         int arr[rows][cols] = {{0, 1, 0, 1},
                                {0, 1, 1, 0},
                                {1, 0, 0, 1},
                                {1, 0, 1, 0}};
 
         for (r = 0; r < rows; r++){
-            rowvec.clear();
-            for (c = 0; c < cols; c++){ rowvec.push_back(arr[r][c]); }
+            for (c = 0; c < cols; c++){ rowvec[c] = arr[r][c]; }
             v2d.push_back(rowvec);
         }
     }
 
     void set_terms_signs(vector<double>& signs){
-        signs.clear();
+        signs.reserve(4);
         const double arr[4] = {1., 1., 1., 1.};
-        for (unsigned int c = 0; c < 4; c++){ signs.push_back(arr[c]); }
+        for (unsigned int c = 0; c < 4; c++){ signs[c] = arr[c]; }
     }
 };
 
