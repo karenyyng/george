@@ -555,7 +555,8 @@ protected:
     void set_combine_B_ixes(const vector<int>& kernel_B_ix){
         unsigned int rows = this->pairs_of_B_ixes_.size(), 
                      cols = this->pairs_of_B_ixes_[0].size();
-        vector<int> temp_row;
+        vector<int> temp_row(4);
+        comb_B_ixes_.reserve(24);
 
         for (unsigned int r = 0; r < rows; r++){
             temp_row.clear();
@@ -571,7 +572,8 @@ protected:
     void set_combine_C_ixes(const vector<int>& kernel_C_ix){
         unsigned int rows = this->pairs_of_C_ixes_.size(), 
                      cols = this->pairs_of_C_ixes_[0].size();
-        vector<int> temp_row;
+        vector<int> temp_row(4);
+        comb_C_ixes_.reserve(12);
 
         for (unsigned int r = 0; r < rows; r++){
             temp_row.clear();
@@ -588,7 +590,7 @@ protected:
         double allTermBs = 0.;
         double allTermCs = 0.;
         
-        int row; 
+        int row;  // C++ is row major - bad for performance - oh well.
         const int b_row_begin = r * 6; 
         const int b_row_end = b_row_begin + 6;
 
@@ -604,16 +606,6 @@ protected:
         for (row = c_row_begin; row < c_row_end; row++){
             allTermCs += termC(comb_C_ixes_[row]);
         }
-
-        // for (vector< vector<int> >::iterator row_it = this->comb_B_ixes_.begin();
-        //    row_it < this->comb_B_ixes_.end(); ++row_it ){
-        //    allTermBs += termB(x1, x2, *row_it);
-        // }
-
-        // for (vector< vector<int> >::iterator row_it = this->comb_C_ixes_.begin();
-        //    row_it < this->comb_C_ixes_.end(); ++row_it ){
-        //    allTermCs += termC(*row_it);
-        // }
 
         // printf ("combined terms in Sigma4thDeriv = %.2f \n",
         //        (termA - allTermBs + allTermCs) / 4.);
