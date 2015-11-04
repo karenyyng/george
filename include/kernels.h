@@ -11,6 +11,47 @@ using std::cout;
 using std::endl;
 
 namespace george {
+
+template <typename T>
+class TwoDimensionalDynamicArray{
+// This is meant to be a bare metal wrapper to a dynamic array.
+// No error handling is intended. 
+// Construction of an N-dimensional array is similar.
+public:
+    T** val;
+    int row_no;
+    int col_no;
+
+    TwoDimensionalDynamicArray () {};
+
+    // Ideally memory is allocated during construction.
+    // But that syntax is forbidden in the header for initializing
+    // the array in the DerivativeExpSquaredKernel constructor.
+    void allocate_memory(const int& row_no, const int& col_no) { 
+        this->row_no = row_no; 
+        this->col_no = col_no;
+        unsigned int r;
+
+        std::cout << "row_no = " << this->row_no << ", col_no = " << this->col_no << std::endl;
+
+        // Allocate memory for array of row arrays of pointers.
+        // Each pointer here points to the beginning of a row.
+        this->val = new T* [row_no];
+
+        // Allocate memory within a row. 
+        // There needs to be the same no. of `new` as `delete`.
+        for (r=0; r < row_no; r++) this->val[r] = new T[col_no];  
+    }
+
+    // Destructor for properly freeing memory.
+    ~TwoDimensionalDynamicArray(){
+        unsigned int r;
+        for (r = 0; r < this->row_no; r++) delete[] val[r];
+        delete[] val;
+    }
+
+};
+
 namespace kernels {
 
 
@@ -406,8 +447,13 @@ class DerivativeExpSquaredKernel: public ExpSquaredKernel<M>{
 public:
     DerivativeExpSquaredKernel (const long ndim, M* metric):
         ExpSquaredKernel<M>(ndim, metric){
-             this->set_termB_ixes(pairs_of_B_ixes_);
-             this->set_termC_ixes(pairs_of_C_ixes_);
+             this->comb_B_ixes_.allocate_memory(24, 4);
+             this->comb_C_ixes_.allocate_memory(12, 4);
+             this->pairs_of_B_ixes_.allocate_memory(6, 4);
+             this->pairs_of_C_ixes_.allocate_memory(3, 4);
+
+             this->set_termB_ixes(pairs_of_B_ixes_.val);
+             this->set_termC_ixes(pairs_of_C_ixes_.val);
         };
 
     using Kernel::value;
@@ -462,10 +508,12 @@ public:
 
 protected:
     // M* metric_;
-    vector < vector <int> > pairs_of_B_ixes_;
-    vector < vector <int> > pairs_of_C_ixes_;
-    vector < vector <int> > comb_B_ixes_;
-    vector < vector <int> > comb_C_ixes_;
+    george::TwoDimensionalDynamicArray<unsigned int> pairs_of_B_ixes_;
+    george::TwoDimensionalDynamicArray<unsigned int> pairs_of_C_ixes_;
+    george::TwoDimensionalDynamicArray<unsigned int> comb_B_ixes_;
+    george::TwoDimensionalDynamicArray<unsigned int> comb_C_ixes_;
+    // vector < vector <int> > comb_B_ixes_;
+    // vector < vector <int> > comb_C_ixes_;
     
     double X(const double* x1, const double* x2, const int spatial_ix){
         /* l_sq fixed  */
@@ -480,42 +528,42 @@ protected:
             this->metric_->get_parameter(spatial_ix);
     }
 
-    void set_termB_ixes(vector <vector <int> >& v2d){
+    void set_termB_ixes(unsigned int** v2d){
+    // void set_termB_ixes(vector <vector <int> >& v2d){
         unsigned int r, c;
         const int rows = 6, cols = 4;
 
         // reserve vectors
-        vector<int> rowvector(4);
-        v2d.reserve(rows);
+        // vector<int> rowvector(4);
+        // v2d.reserve(rows);
 
-        int arr[rows][cols] = {{0, 1, 2, 3},
-                               {0, 2, 1, 3},
-                               {0, 3, 1, 2},
-                               {2, 3, 0, 1},
-                               {1, 3, 0, 2},
-                               {1, 2, 0, 3}};
+        unsigned int arr[rows][cols] = {{0, 1, 2, 3},
+                                        {0, 2, 1, 3},
+                                        {0, 3, 1, 2},
+                                        {2, 3, 0, 1},
+                                        {1, 3, 0, 2},
+                                        {1, 2, 0, 3}};
 
         for (r = 0; r < rows; r++) {
-            for (c = 0; c < cols; c++ ) { rowvector[c] = arr[r][c]; }
-            v2d.push_back(rowvector);
+            for (c = 0; c < cols; c++ ) { v2d[r][c] = arr[r][c]; }
         }
     }
 
-    void set_termC_ixes(vector <vector <int> >& v2d){
+    void set_termC_ixes(unsigned int** v2d){
+    // void set_termC_ixes(vector <vector <int> >& v2d){
         unsigned int r, c;
         const int rows = 3, cols = 4;
 
         // reserve memory for vectors 
-        vector<int> rowvector(4);
-        v2d.reserve(rows);
+        // vector<int> rowvector(4);
+        // v2d.reserve(rows);
 
-        int arr[rows][cols] = {{0, 1, 2, 3},
-                               {0, 2, 1, 3},
-                               {0, 3, 1, 2}};
+        unsigned int arr[rows][cols] = {{0, 1, 2, 3},
+                                        {0, 2, 1, 3},
+                                        {0, 3, 1, 2}};
 
         for (r = 0; r < rows; r++) {
-            for (c = 0; c < cols; c++) { rowvector[c] = arr[r][c]; }
-            v2d.push_back(rowvector);
+            for (c = 0; c < cols; c++) { v2d[r][c] = arr[r][c]; }
         }
     }
 
@@ -527,7 +575,8 @@ protected:
         return term;
     }
 
-    double termB(const double* x1, const double* x2, const vector<int> ix) {
+    double termB(const double* x1, const double* x2, const unsigned int* ix) {
+    // double termB(const double* x1, const double* x2, const vector<int> ix) {
         /* l_sq fixed  */
         if (ix[2] != ix[3]) { return 0; }
 
@@ -539,10 +588,11 @@ protected:
             this->metric_->get_parameter(ix[2]);
     }
 
-    double termC(const vector<int> ix) {
+    double termC(const unsigned int* ix){
+    // double termC(const vector<int> ix) {
         /* l_sq fixed  */
-        if (ix[0] != ix[1]) { return 0; }
-        if (ix[2] != ix[3]) { return 0; }
+        if (ix[0] != ix[1]) { return 0.; }
+        if (ix[2] != ix[3]) { return 0.; }
         // printf ("termC: ix[2] = %2d\n", ix[2]);
         // printf ("termC: this->metric_->get_parameter(ix[2]) = %.2f\n",
         //         this->metric_->get_parameter(ix[2]));
@@ -553,57 +603,57 @@ protected:
             this->metric_->get_parameter(ix[0]));
     }
 
-    void set_combine_B_ixes(const vector<int>& kernel_B_ix){
-        unsigned int rows = this->pairs_of_B_ixes_.size(), 
-                     cols = this->pairs_of_B_ixes_[0].size();
-        vector<int> temp_row(cols);
-        comb_B_ixes_.reserve(24);
+    void set_combine_B_ixes(const vector<int>& kernel_B_ix, const int& term_no){
+               
+        unsigned int rows = this->pairs_of_B_ixes_.row_no, 
+                     cols = this->pairs_of_B_ixes_.col_no;
+        // vector<int> temp_row(cols);
+        // comb_B_ixes_.reserve(24);
+
+        int actual_row = 0;
 
         for (unsigned int r = 0; r < rows; r++){
+            actual_row = r + rows * term_no;
             for (unsigned int c = 0; c < cols; c++){
-                temp_row[c] = kernel_B_ix[pairs_of_B_ixes_[r][c]];
+                comb_B_ixes_.val[actual_row][c] = kernel_B_ix[pairs_of_B_ixes_.val[r][c]];
+                // comb_B_ixes_.push_back(temp_row);
             }
-            comb_B_ixes_.push_back(temp_row);
         }
-        // print_1D_vec(kernel_B_ix, "B_ix");
-        // print_2D_vec(comb_B_ixes_, "comb_B_ixes");
     }
 
-    void set_combine_C_ixes(const vector<int>& kernel_C_ix){
-        unsigned int rows = this->pairs_of_C_ixes_.size(), 
-                     cols = this->pairs_of_C_ixes_[0].size();
-        vector<int> temp_row(cols);
-        comb_C_ixes_.reserve(12);
+    void set_combine_C_ixes(const vector<int>& kernel_C_ix, const int& term_no){
+        unsigned int rows = this->pairs_of_C_ixes_.row_no, 
+                     cols = this->pairs_of_C_ixes_.col_no;
+        int actual_row = 0;
 
         for (unsigned int r = 0; r < rows; r++){
+            actual_row = r + rows * term_no;
             for (unsigned int c = 0; c < cols; c++){
-                temp_row[c] = kernel_C_ix[pairs_of_C_ixes_[r][c]];
+                 comb_C_ixes_.val[actual_row][c] = kernel_C_ix[pairs_of_C_ixes_.val[r][c]];
             }
-            comb_C_ixes_.push_back(temp_row);
         }
-        // print_1D_vec(kernel_C_ix, "C_ix");
-        // print_2D_vec(comb_C_ixes_, "comb_C_ixes");
     }
 
-    double Sigma4thDeriv(const int r, const vector<int> ix, const double* x1, const double* x2){
+    double Sigma4thDeriv(const int term_no, const vector<int> ix, const double* x1, const double* x2){
         double allTermBs = 0.;
         double allTermCs = 0.;
         
         int row;  // C++ is row major - bad for performance - oh well.
-        const int b_row_begin = r * 6; 
+        // have to consider each variation of the 4 terms on eqn. (2 - 7)
+        const int b_row_begin = term_no * 6; 
         const int b_row_end = b_row_begin + 6;
 
-        const int c_row_begin = r * 3; 
+        const int c_row_begin = term_no * 3; 
         const int c_row_end = c_row_begin + 3;
         
         double termA_val = termA(x1, x2, ix);
 
         for (row = b_row_begin; row < b_row_end; row++){
-            allTermBs += termB(x1, x2, comb_B_ixes_[row]);
+            allTermBs += termB(x1, x2, comb_B_ixes_.val[row]);
         }
 
         for (row = c_row_begin; row < c_row_end; row++){
-            allTermCs += termC(comb_C_ixes_[row]);
+            allTermCs += termC(comb_C_ixes_.val[row]);
         }
 
         // printf ("combined terms in Sigma4thDeriv = %.2f \n",
@@ -631,16 +681,18 @@ template <typename M>
 class KappaKappaExpSquaredKernel: public DerivativeExpSquaredKernel<M>{
 public:
     KappaKappaExpSquaredKernel (const long ndim, M* metric):
-       DerivativeExpSquaredKernel<M>(ndim, metric){
-           this->set_ix_list(this->ix_list_);
-           this->set_terms_signs(this->terms_signs_);
+        DerivativeExpSquaredKernel<M>(ndim, metric){
+            this->set_ix_list(this->ix_list_);
+            this->set_terms_signs(this->terms_signs_);
 
-           for (unsigned int r = 0; r < this->ix_list_.size(); r++){
-               // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
-               this->set_combine_B_ixes(this->ix_list_[r]);
-               this->set_combine_C_ixes(this->ix_list_[r]);
-           }
-       };
+            unsigned int term_no;
+            for (term_no = 0; term_no < this->ix_list_.size(); term_no++){
+                // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
+                // organised as 24 rows by 4 cols 
+                this->set_combine_B_ixes(this->ix_list_[term_no], term_no);
+                this->set_combine_C_ixes(this->ix_list_[term_no], term_no);
+            }
+        };
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
@@ -692,11 +744,13 @@ public:
            this->set_ix_list(this->ix_list_);
            this->set_terms_signs(this->terms_signs_);
 
-           for (unsigned int r = 0; r < this->ix_list_.size(); r++){
-               // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
-               this->set_combine_B_ixes(this->ix_list_[r]);
-               this->set_combine_C_ixes(this->ix_list_[r]);
-           }
+            unsigned int term_no;
+            for (term_no = 0; term_no < this->ix_list_.size(); term_no++){
+                // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
+                // organised as 24 rows by 4 cols 
+                this->set_combine_B_ixes(this->ix_list_[term_no], term_no);
+                this->set_combine_C_ixes(this->ix_list_[term_no], term_no);
+            }
        };
 
     using Kernel::value;
@@ -748,11 +802,13 @@ public:
            this->set_ix_list(this->ix_list_);
            this->set_terms_signs(this->terms_signs_);
 
-           for (unsigned int r = 0; r < this->ix_list_.size(); r++){
-               // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
-               this->set_combine_B_ixes(this->ix_list_[r]);
-               this->set_combine_C_ixes(this->ix_list_[r]);
-           }
+            unsigned int term_no;
+            for (term_no = 0; term_no < this->ix_list_.size(); term_no++){
+                // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
+                // organised as 24 rows by 4 cols 
+                this->set_combine_B_ixes(this->ix_list_[term_no], term_no);
+                this->set_combine_C_ixes(this->ix_list_[term_no], term_no);
+            }
        };
 
     using Kernel::value;
@@ -805,10 +861,12 @@ public:
            this->set_ix_list(this->ix_list_);
            this->set_terms_signs(this->terms_signs_);
 
-           for (unsigned int r = 0; r < this->ix_list_.size(); r++){
-               // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
-               this->set_combine_B_ixes(this->ix_list_[r]);
-               this->set_combine_C_ixes(this->ix_list_[r]);
+           unsigned int term_no;
+           for (term_no = 0; term_no < this->ix_list_.size(); term_no++){
+               // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
+               // organised as 24 rows by 4 cols 
+               this->set_combine_B_ixes(this->ix_list_[term_no], term_no);
+               this->set_combine_C_ixes(this->ix_list_[term_no], term_no);
            }
        };
 
@@ -858,14 +916,16 @@ class Gamma1Gamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
     Gamma1Gamma2ExpSquaredKernel (const long ndim, M* metric):
        DerivativeExpSquaredKernel<M>(ndim, metric){
-           this->set_ix_list(this->ix_list_);
-           this->set_terms_signs(this->terms_signs_);
+            this->set_ix_list(this->ix_list_);
+            this->set_terms_signs(this->terms_signs_);
 
-           for (unsigned int r = 0; r < this->ix_list_.size(); r++){
-               // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
-               this->set_combine_B_ixes(this->ix_list_[r]);
-               this->set_combine_C_ixes(this->ix_list_[r]);
-           }
+            unsigned int term_no;
+            for (term_no = 0; term_no < this->ix_list_.size(); term_no++){
+                // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
+                // organised as 24 rows by 4 cols 
+                this->set_combine_B_ixes(this->ix_list_[term_no], term_no);
+                this->set_combine_C_ixes(this->ix_list_[term_no], term_no);
+            }
        };
 
 
@@ -918,11 +978,14 @@ public:
            this->set_ix_list(this->ix_list_);
            this->set_terms_signs(this->terms_signs_);
 
-           for (unsigned int r = 0; r < this->ix_list_.size(); r++){
-               // comb_B_ixes_ and comb_C_ixes_ are 24 x 4 in size
-               this->set_combine_B_ixes(this->ix_list_[r]);
-               this->set_combine_C_ixes(this->ix_list_[r]);
+           unsigned int term_no;
+           for (term_no = 0; term_no < this->ix_list_.size(); term_no++){
+               // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
+               // organised as 24 rows by 4 cols 
+               this->set_combine_B_ixes(this->ix_list_[term_no], term_no);
+               this->set_combine_C_ixes(this->ix_list_[term_no], term_no);
            }
+
        };
 
     using Kernel::value;
