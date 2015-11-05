@@ -14,9 +14,10 @@ namespace george {
 
 template <typename T>
 class TwoDimensionalDynamicArray{
-// This is meant to be a bare metal wrapper to a dynamic array.
-// No error handling is intended. 
-// Construction of an N-dimensional array is similar.
+/* This is meant to be a bare metal wrapper to a dynamic array.
+* No error handling is intended. 
+* Construction of an N-dimensional array is similar.
+*/
 public:
     T** val;
     int row_no;
@@ -32,7 +33,7 @@ public:
         this->col_no = col_no;
         unsigned int r;
 
-        std::cout << "row_no = " << this->row_no << ", col_no = " << this->col_no << std::endl;
+        // std::cout << "row_no = " << this->row_no << ", col_no = " << this->col_no << std::endl;
 
         // Allocate memory for array of row arrays of pointers.
         // Each pointer here points to the beginning of a row.
@@ -41,6 +42,19 @@ public:
         // Allocate memory within a row. 
         // There needs to be the same no. of `new` as `delete`.
         for (r=0; r < row_no; r++) this->val[r] = new T[col_no];  
+    }
+
+    void print() const{
+        unsigned int r, c;
+        if (this->row_no > 0 && this->col_no > 0){
+
+            for (r=0; r < this->row_no; r++){
+                for (c=0; r < this->col_no; c++){ 
+                    std:: cout << this->val[r][c] << " "; }
+                cout << "\n";
+            } 
+            cout << "\n";
+        } 
     }
 
     // Destructor for properly freeing memory.
@@ -472,8 +486,6 @@ public:
     double metric_gradient (const double* x1, const double* x2, double* grad) {
         int i, n = this->metric_->size();
         double r2 = this->metric_->gradient(x1, x2, grad),
-               // gets the alternative get_radial_gradient method
-               // otherwise will get error
                kg = this->get_radial_gradient(x1, x2);
         for (i = 0; i < n; ++i) grad[i] *= kg;
         return r2;
@@ -529,13 +541,8 @@ protected:
     }
 
     void set_termB_ixes(unsigned int** v2d){
-    // void set_termB_ixes(vector <vector <int> >& v2d){
         unsigned int r, c;
         const int rows = 6, cols = 4;
-
-        // reserve vectors
-        // vector<int> rowvector(4);
-        // v2d.reserve(rows);
 
         unsigned int arr[rows][cols] = {{0, 1, 2, 3},
                                         {0, 2, 1, 3},
@@ -550,13 +557,9 @@ protected:
     }
 
     void set_termC_ixes(unsigned int** v2d){
-    // void set_termC_ixes(vector <vector <int> >& v2d){
         unsigned int r, c;
         const int rows = 3, cols = 4;
 
-        // reserve memory for vectors 
-        // vector<int> rowvector(4);
-        // v2d.reserve(rows);
 
         unsigned int arr[rows][cols] = {{0, 1, 2, 3},
                                         {0, 2, 1, 3},
@@ -567,9 +570,9 @@ protected:
         }
     }
 
-    double termA(const double* x1, const double* x2, const vector<int> ix) {
+    double termA(const double* x1, const double* x2, const unsigned int* ix) {
         double term = 1.;
-        for (unsigned int i=0; i < ix.size(); i++){
+        for (unsigned int i=0; i < 4; i++){
             term *= this->X(x1, x2, ix[i]);
         }
         return term;
@@ -588,8 +591,7 @@ protected:
             this->metric_->get_parameter(ix[2]);
     }
 
-    double termC(const unsigned int* ix){
-    // double termC(const vector<int> ix) {
+    double termC(const unsigned int* ix) {
         /* l_sq fixed  */
         if (ix[0] != ix[1]) { return 0.; }
         if (ix[2] != ix[3]) { return 0.; }
@@ -603,12 +605,10 @@ protected:
             this->metric_->get_parameter(ix[0]));
     }
 
-    void set_combine_B_ixes(const vector<int>& kernel_B_ix, const int& term_no){
+    void set_combine_B_ixes(const unsigned int* kernel_B_ix, const int& term_no){
                
         unsigned int rows = this->pairs_of_B_ixes_.row_no, 
                      cols = this->pairs_of_B_ixes_.col_no;
-        // vector<int> temp_row(cols);
-        // comb_B_ixes_.reserve(24);
 
         int actual_row = 0;
 
@@ -616,12 +616,11 @@ protected:
             actual_row = r + rows * term_no;
             for (unsigned int c = 0; c < cols; c++){
                 comb_B_ixes_.val[actual_row][c] = kernel_B_ix[pairs_of_B_ixes_.val[r][c]];
-                // comb_B_ixes_.push_back(temp_row);
             }
         }
     }
 
-    void set_combine_C_ixes(const vector<int>& kernel_C_ix, const int& term_no){
+    void set_combine_C_ixes(const unsigned int* kernel_C_ix, const int& term_no){
         unsigned int rows = this->pairs_of_C_ixes_.row_no, 
                      cols = this->pairs_of_C_ixes_.col_no;
         int actual_row = 0;
@@ -634,7 +633,9 @@ protected:
         }
     }
 
-    double Sigma4thDeriv(const int term_no, const vector<int> ix, const double* x1, const double* x2){
+
+    double Sigma4thDeriv(const int term_no, const unsigned int* ix, 
+                         const double* x1, const double* x2){
         double allTermBs = 0.;
         double allTermCs = 0.;
         
@@ -664,13 +665,11 @@ protected:
     }
 
     double compute_Sigma4deriv_matrix(const double* x1, const double* x2,
-                                      const vector< vector<int> >& ix_list,
+                                      unsigned int** ix_list,
                                       const vector<double>& terms_signs){
         double term = 0;
-        // this->print_2D_vec(ix_list, "ix_list");
-        // this->print_1D_vec(signs, "terms_signs");
 
-        for (unsigned int r = 0; r < ix_list.size(); r++){
+        for (unsigned int r = 0; r < 4; r++){
             term += terms_signs[r] * this->Sigma4thDeriv(r, ix_list[r], x1, x2);
         }
         return term;
@@ -682,22 +681,25 @@ class KappaKappaExpSquaredKernel: public DerivativeExpSquaredKernel<M>{
 public:
     KappaKappaExpSquaredKernel (const long ndim, M* metric):
         DerivativeExpSquaredKernel<M>(ndim, metric){
-            this->set_ix_list(this->ix_list_);
-            this->set_terms_signs(this->terms_signs_);
+
+           ix_list_.allocate_memory(4, 4);
+           this->set_ix_list(this->ix_list_.val);
+           this->set_terms_signs(this->terms_signs_);
 
             unsigned int term_no;
-            for (term_no = 0; term_no < this->ix_list_.size(); term_no++){
+            for (term_no = 0; term_no < this->ix_list_.row_no; term_no++){
                 // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
                 // organised as 24 rows by 4 cols 
-                this->set_combine_B_ixes(this->ix_list_[term_no], term_no);
-                this->set_combine_C_ixes(this->ix_list_[term_no], term_no);
+                this->set_combine_B_ixes(this->ix_list_.val[term_no], term_no);
+                this->set_combine_C_ixes(this->ix_list_.val[term_no], term_no);
             }
+
         };
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_, 
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val, 
                                                this->terms_signs_);
     };
 
@@ -707,23 +709,18 @@ public:
     };
 
 private:
-    vector< vector<int> > ix_list_;
+    TwoDimensionalDynamicArray<unsigned int> ix_list_;
     vector<double> terms_signs_;
 
-    void set_ix_list(vector < vector<int> >& v2d){
-        // could have used a 2D array for this
-        const int rows = 4, cols = 4;
-        int arr[rows][cols] = {{0, 0, 0, 0},
-                               {0, 0, 1, 1},
-                               {1, 1, 0, 0},
-                               {1, 1, 1, 1}};
+    void set_ix_list(unsigned int** v2d){
+        const unsigned int arr[4][4] = {{0, 0, 0, 0},
+                                        {0, 0, 1, 1},
+                                        {1, 1, 0, 0},
+                                        {1, 1, 1, 1}};
 
-        vector<int> rowvec(cols);
-        v2d.reserve(rows);
 
-        for (unsigned int r = 0; r < rows; r++){
-            for (unsigned int c = 0; c < cols; c++){ rowvec[c] = arr[r][c]; }
-            v2d.push_back(rowvec);
+        for (unsigned int r = 0; r < 4; r++){
+            for (unsigned int c = 0; c < 4; c++){ v2d[r][c] = arr[r][c]; }
         }
     }
 
@@ -741,22 +738,24 @@ class KappaGamma1ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
     KappaGamma1ExpSquaredKernel (const long ndim, M* metric):
        DerivativeExpSquaredKernel<M>(ndim, metric){
-           this->set_ix_list(this->ix_list_);
+
+           ix_list_.allocate_memory(4, 4);
+           this->set_ix_list(this->ix_list_.val);
            this->set_terms_signs(this->terms_signs_);
 
             unsigned int term_no;
-            for (term_no = 0; term_no < this->ix_list_.size(); term_no++){
+            for (term_no = 0; term_no < this->ix_list_.row_no; term_no++){
                 // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
                 // organised as 24 rows by 4 cols 
-                this->set_combine_B_ixes(this->ix_list_[term_no], term_no);
-                this->set_combine_C_ixes(this->ix_list_[term_no], term_no);
+                this->set_combine_B_ixes(this->ix_list_.val[term_no], term_no);
+                this->set_combine_C_ixes(this->ix_list_.val[term_no], term_no);
             }
        };
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_, 
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val, 
                                                this->terms_signs_);
     };
 
@@ -767,23 +766,18 @@ public:
 
 
 private:
-    vector< vector<int> > ix_list_;
+    TwoDimensionalDynamicArray<unsigned int> ix_list_;
     vector<double> terms_signs_;
 
-    void set_ix_list(vector< vector<int> >& v2d){
-        const int rows = 4, cols = 4;
-        int arr[rows][cols] = {{0, 0, 0, 0},
-                               {0, 0, 1, 1},
-                               {1, 1, 0, 0},
-                               {1, 1, 1, 1}};
-
-        vector<int> rowvec(cols);
-        v2d.reserve(rows);
+    void set_ix_list(unsigned int** v2d){
+        const unsigned int arr[4][4] = {{0, 0, 0, 0},
+                                        {0, 0, 1, 1},
+                                        {1, 1, 0, 0},
+                                        {1, 1, 1, 1}};
 
         unsigned int r = 0, c = 0;
-        for (r = 0; r < rows; r++){
-            for (c = 0; c < cols; c++){ rowvec[c] = arr[r][c]; }
-            v2d.push_back(rowvec);
+        for (r = 0; r < 4; r++){
+            for (c = 0; c < 4; c++){ v2d[r][c] = arr[r][c]; }
         }
     }
 
@@ -799,50 +793,47 @@ class KappaGamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
     KappaGamma2ExpSquaredKernel (const long ndim, M* metric):
        DerivativeExpSquaredKernel<M>(ndim, metric){
-           this->set_ix_list(this->ix_list_);
+
+           ix_list_.allocate_memory(4, 4);
+           this->set_ix_list(this->ix_list_.val);
            this->set_terms_signs(this->terms_signs_);
 
             unsigned int term_no;
-            for (term_no = 0; term_no < this->ix_list_.size(); term_no++){
+            for (term_no = 0; term_no < this->ix_list_.row_no; term_no++){
                 // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
                 // organised as 24 rows by 4 cols 
-                this->set_combine_B_ixes(this->ix_list_[term_no], term_no);
-                this->set_combine_C_ixes(this->ix_list_[term_no], term_no);
+                this->set_combine_B_ixes(this->ix_list_.val[term_no], term_no);
+                this->set_combine_C_ixes(this->ix_list_.val[term_no], term_no);
             }
        };
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_, 
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val, 
                                                this->terms_signs_);
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
-        printf("KappaGamma2ExpSquaredKernel.get_radial_gradient invoked\n");
+        // printf("KappaGamma2ExpSquaredKernel.get_radial_gradient invoked\n");
         return -0.5 * this->value(x1, x2) ;
     };
 
 
 private:
-    vector< vector<int> > ix_list_;
+    TwoDimensionalDynamicArray<unsigned int> ix_list_;
     vector<double> terms_signs_;
 
-    void set_ix_list(vector< vector<int> >& v2d){
+    void set_ix_list(unsigned int** v2d){
         unsigned int r = 0, c = 0;
-        const int rows = 4, cols = 4;
 
-        vector<int> rowvec(cols);
-        v2d.reserve(rows);
+        const unsigned int arr[4][4] = {{0, 0, 0, 1},
+                                        {0, 0, 1, 0},
+                                        {1, 1, 0, 1},
+                                        {1, 1, 1, 0}};
 
-        int arr[rows][cols] = {{0, 0, 0, 1},
-                               {0, 0, 1, 0},
-                               {1, 1, 0, 1},
-                               {1, 1, 1, 0}};
-
-        for (r = 0; r < rows; r++){
-            for (c = 0; c < cols; c++){ rowvec[c] = arr[r][c]; }
-            v2d.push_back(rowvec);
+        for (r = 0; r < 4; r++){
+            for (c = 0; c < 4; c++){ v2d[r][c] = arr[r][c]; }
         }
     }
 
@@ -858,22 +849,25 @@ class Gamma1Gamma1ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
     Gamma1Gamma1ExpSquaredKernel (const long ndim, M* metric):
        DerivativeExpSquaredKernel<M>(ndim, metric){
-           this->set_ix_list(this->ix_list_);
+
+           ix_list_.allocate_memory(4, 4);
+
+           this->set_ix_list(this->ix_list_.val);
            this->set_terms_signs(this->terms_signs_);
 
            unsigned int term_no;
-           for (term_no = 0; term_no < this->ix_list_.size(); term_no++){
+           for (term_no = 0; term_no < this->ix_list_.row_no; term_no++){
                // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
                // organised as 24 rows by 4 cols 
-               this->set_combine_B_ixes(this->ix_list_[term_no], term_no);
-               this->set_combine_C_ixes(this->ix_list_[term_no], term_no);
+               this->set_combine_B_ixes(this->ix_list_.val[term_no], term_no);
+               this->set_combine_C_ixes(this->ix_list_.val[term_no], term_no);
            }
        };
 
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_, 
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val, 
                                                this->terms_signs_);
     };
 
@@ -883,24 +877,19 @@ public:
     };
 
 private:
-    vector< vector<int> > ix_list_;
+    TwoDimensionalDynamicArray<unsigned int> ix_list_;
     vector<double> terms_signs_;
 
-    void set_ix_list(vector< vector<int> >& v2d){
+    void set_ix_list(unsigned int** v2d){
         unsigned int r = 0, c = 0;
-        const int rows = 4, cols = 4;
 
-        vector<int> rowvec(cols);
-        v2d.reserve(rows);
+        const unsigned int arr[4][4] = {{0, 0, 0, 0},
+                                        {0, 0, 1, 1},
+                                        {1, 1, 0, 0},
+                                        {1, 1, 1, 1}};
 
-        int arr[rows][cols] = {{0, 0, 0, 0},
-                               {0, 0, 1, 1},
-                               {1, 1, 0, 0},
-                               {1, 1, 1, 1}};
-
-        for (r = 0; r < rows; r++){
-            for (c = 0; c < cols; c++){ rowvec[c] = arr[r][c]; }
-            v2d.push_back(rowvec);
+        for (r = 0; r < 4; r++){
+            for (c = 0; c < 4; c++){ v2d[r][c] = arr[r][c]; }
         }
     }
 
@@ -916,15 +905,18 @@ class Gamma1Gamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
     Gamma1Gamma2ExpSquaredKernel (const long ndim, M* metric):
        DerivativeExpSquaredKernel<M>(ndim, metric){
-            this->set_ix_list(this->ix_list_);
+
+            ix_list_.allocate_memory(4, 4);
+
+            this->set_ix_list(this->ix_list_.val);
             this->set_terms_signs(this->terms_signs_);
 
             unsigned int term_no;
-            for (term_no = 0; term_no < this->ix_list_.size(); term_no++){
+            for (term_no = 0; term_no < this->ix_list_.row_no; term_no++){
                 // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
                 // organised as 24 rows by 4 cols 
-                this->set_combine_B_ixes(this->ix_list_[term_no], term_no);
-                this->set_combine_C_ixes(this->ix_list_[term_no], term_no);
+                this->set_combine_B_ixes(this->ix_list_.val[term_no], term_no);
+                this->set_combine_C_ixes(this->ix_list_.val[term_no], term_no);
             }
        };
 
@@ -932,7 +924,7 @@ public:
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list_, 
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val, 
                                                terms_signs_);
     };
 
@@ -942,24 +934,19 @@ public:
     };
 
 private:
-    vector< vector<int> > ix_list_;
+    TwoDimensionalDynamicArray<unsigned int> ix_list_;
     vector<double> terms_signs_;
 
-    void set_ix_list(vector< vector<int> >& v2d){
+    void set_ix_list(unsigned int** v2d){
         unsigned int r = 0, c = 0;
-        const int rows = 4, cols = 4;
 
-        vector<int> rowvec(cols);
-        v2d.reserve(rows);
+        const unsigned int arr[4][4] = {{0, 0, 0, 1},
+                                        {0, 0, 1, 0},
+                                        {1, 1, 0, 1},
+                                        {1, 1, 1, 0}};
 
-        int arr[rows][cols] = {{0, 0, 0, 1},
-                               {0, 0, 1, 0},
-                               {1, 1, 0, 1},
-                               {1, 1, 1, 0}};
-
-        for (r = 0; r < rows; r++){
-            for (c = 0; c < cols; c++){ rowvec[c] = arr[r][c]; }
-            v2d.push_back(rowvec);
+        for (r = 0; r < 4; r++){
+            for (c = 0; c < 4; c++){ v2d[r][c] = arr[r][c]; }
         }
     }
 
@@ -975,15 +962,18 @@ class Gamma2Gamma2ExpSquaredKernel : public DerivativeExpSquaredKernel<M>{
 public:
     Gamma2Gamma2ExpSquaredKernel (const long ndim, M* metric):
        DerivativeExpSquaredKernel<M>(ndim, metric){
-           this->set_ix_list(this->ix_list_);
+
+           ix_list_.allocate_memory(4, 4);
+
+           this->set_ix_list(this->ix_list_.val);
            this->set_terms_signs(this->terms_signs_);
 
            unsigned int term_no;
-           for (term_no = 0; term_no < this->ix_list_.size(); term_no++){
+           for (term_no = 0; term_no < this->ix_list_.row_no; term_no++){
                // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
                // organised as 24 rows by 4 cols 
-               this->set_combine_B_ixes(this->ix_list_[term_no], term_no);
-               this->set_combine_C_ixes(this->ix_list_[term_no], term_no);
+               this->set_combine_B_ixes(this->ix_list_.val[term_no], term_no);
+               this->set_combine_C_ixes(this->ix_list_.val[term_no], term_no);
            }
 
        };
@@ -991,7 +981,8 @@ public:
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, ix_list_, terms_signs_);
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val, 
+                                               terms_signs_);
     };
 
     double get_radial_gradient (const double* x1, const double* x2) {
@@ -999,24 +990,19 @@ public:
     };
 
 private:
-    vector< vector<int> > ix_list_;
+    TwoDimensionalDynamicArray<unsigned int> ix_list_;
     vector<double> terms_signs_;
 
-    void set_ix_list(vector< vector<int> >& v2d){
+    void set_ix_list(unsigned int** v2d){
         unsigned int r = 0, c = 0;
-        const int rows = 4, cols = 4;
-
-        vector<int> rowvec(cols);
-        v2d.reserve(rows);
-
-        int arr[rows][cols] = {{0, 1, 0, 1},
-                               {0, 1, 1, 0},
-                               {1, 0, 0, 1},
-                               {1, 0, 1, 0}};
+        const unsigned int rows = 4, cols = 4;
+        const unsigned int arr[rows][cols] = {{0, 1, 0, 1},
+                                              {0, 1, 1, 0},
+                                              {1, 0, 0, 1},
+                                              {1, 0, 1, 0}};
 
         for (r = 0; r < rows; r++){
-            for (c = 0; c < cols; c++){ rowvec[c] = arr[r][c]; }
-            v2d.push_back(rowvec);
+            for (c = 0; c < cols; c++){ v2d[r][c] = arr[r][c]; }
         }
     }
 
