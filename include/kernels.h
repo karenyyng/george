@@ -5,6 +5,8 @@
 #include <cfloat>
 #include <vector>
 #include <iostream>
+#include <omp.h>
+#include <stdexcept>
 
 using std::vector;
 using std::cout;
@@ -31,7 +33,6 @@ public:
     void allocate_memory(const int& row_no, const int& col_no) { 
         this->row_no = row_no; 
         this->col_no = col_no;
-        unsigned int r;
 
         // std::cout << "row_no = " << this->row_no << ", col_no = " << this->col_no << std::endl;
 
@@ -41,6 +42,7 @@ public:
 
         // Allocate memory within a row. 
         // There needs to be the same no. of `new` as `delete`.
+        unsigned int r;
         for (r=0; r < row_no; r++) this->val[r] = new T[col_no];  
     }
 
@@ -386,7 +388,7 @@ public:
     };
 
     virtual double metric_gradient (const double* x1, const double* x2, double* grad) {
-        throw "Code should not invoke ExpSquaredKernel.metric_gradient()";
+        throw std::logic_error("Code should not invoke ExpSquaredKernel.metric_gradient()");
     };
 
 
@@ -669,7 +671,8 @@ protected:
                                       const vector<double>& terms_signs){
         double term = 0;
 
-        for (unsigned int r = 0; r < 4; r++){
+
+        for (int r = 0; r < 4; r++){
             term += terms_signs[r] * this->Sigma4thDeriv(r, ix_list[r], x1, x2);
         }
         return term;
@@ -1079,7 +1082,7 @@ public:
         lens_field1 = gamma2;
         x1std[i] = x1[i] - 2*x_max_;
       } else {
-        throw "GravLensingExpSquaredKernel::value -- Invalid x range";
+        throw std::out_of_range("GravLensingExpSquaredKernel::value -- Invalid x range");
       }
       if (x2[i] < x_max_) {
         lens_field2 = kappa;
@@ -1091,7 +1094,7 @@ public:
         lens_field2 = gamma2;
         x2std[i] = x2[i] - 2*x_max_;
       } else {
-        throw "GravLensingExpSquaredKernel::value -- Invalid x range";
+        throw std::out_of_range("GravLensingExpSquaredKernel::value -- Invalid x range");
       }
     }
 
