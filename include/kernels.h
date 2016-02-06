@@ -1027,8 +1027,6 @@ public:
   GravLensingExpSquaredKernel (M* metric) :
     ExpSquaredKernel<M>(2, metric) { // This kernel only defined for ndim = 2
 
-      x_max_ = 1.0;
-
       M* metric_kk = new M(*metric);
       kk_ = new KappaKappaExpSquaredKernel<M>(this->ndim_, metric_kk);
 
@@ -1130,8 +1128,6 @@ public:
   };
 
 private:
-  double x_max_; // Assume the GP is defined on [0, x_max_]
-
   KappaKappaExpSquaredKernel<M> * kk_;
   KappaGamma1ExpSquaredKernel<M> * kg1_;
   KappaGamma2ExpSquaredKernel<M> * kg2_;
