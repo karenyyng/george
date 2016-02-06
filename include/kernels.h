@@ -17,7 +17,7 @@ namespace george {
 template <typename T>
 class TwoDimensionalDynamicArray{
 /* This is meant to be a bare metal wrapper to a dynamic array.
-* No error handling is intended. 
+* No error handling is intended.
 * Construction of an N-dimensional array is similar.
 */
 public:
@@ -30,8 +30,8 @@ public:
     // Ideally memory is allocated during construction.
     // But that syntax is forbidden in the header for initializing
     // the array in the DerivativeExpSquaredKernel constructor.
-    void allocate_memory(const int& row_no, const int& col_no) { 
-        this->row_no = row_no; 
+    void allocate_memory(const int& row_no, const int& col_no) {
+        this->row_no = row_no;
         this->col_no = col_no;
 
         // std::cout << "row_no = " << this->row_no << ", col_no = " << this->col_no << std::endl;
@@ -40,10 +40,10 @@ public:
         // Each pointer here points to the beginning of a row.
         this->val = new T* [row_no];
 
-        // Allocate memory within a row. 
+        // Allocate memory within a row.
         // There needs to be the same no. of `new` as `delete`.
         unsigned int r;
-        for (r=0; r < row_no; r++) this->val[r] = new T[col_no];  
+        for (r=0; r < row_no; r++) this->val[r] = new T[col_no];
     }
 
     void print() const{
@@ -51,12 +51,12 @@ public:
         if (this->row_no > 0 && this->col_no > 0){
 
             for (r=0; r < this->row_no; r++){
-                for (c=0; r < this->col_no; c++){ 
+                for (c=0; r < this->col_no; c++){
                     std:: cout << this->val[r][c] << " "; }
                 cout << "\n";
-            } 
+            }
             cout << "\n";
-        } 
+        }
     }
 
     // Destructor for properly freeing memory.
@@ -528,7 +528,7 @@ protected:
     george::TwoDimensionalDynamicArray<unsigned int> comb_C_ixes_;
     // vector < vector <int> > comb_B_ixes_;
     // vector < vector <int> > comb_C_ixes_;
-    
+
     double X(const double* x1, const double* x2, const int spatial_ix){
         /* l_sq fixed  */
 
@@ -608,8 +608,8 @@ protected:
     }
 
     void set_combine_B_ixes(const unsigned int* kernel_B_ix, const int& term_no){
-               
-        unsigned int rows = this->pairs_of_B_ixes_.row_no, 
+
+        unsigned int rows = this->pairs_of_B_ixes_.row_no,
                      cols = this->pairs_of_B_ixes_.col_no;
 
         int actual_row = 0;
@@ -623,7 +623,7 @@ protected:
     }
 
     void set_combine_C_ixes(const unsigned int* kernel_C_ix, const int& term_no){
-        unsigned int rows = this->pairs_of_C_ixes_.row_no, 
+        unsigned int rows = this->pairs_of_C_ixes_.row_no,
                      cols = this->pairs_of_C_ixes_.col_no;
         int actual_row = 0;
 
@@ -636,19 +636,19 @@ protected:
     }
 
 
-    double Sigma4thDeriv(const int term_no, const unsigned int* ix, 
+    double Sigma4thDeriv(const int term_no, const unsigned int* ix,
                          const double* x1, const double* x2){
         double allTermBs = 0.;
         double allTermCs = 0.;
-        
+
         int row;  // C++ is row major - bad for performance - oh well.
         // have to consider each variation of the 4 terms on eqn. (2 - 7)
-        const int b_row_begin = term_no * 6; 
+        const int b_row_begin = term_no * 6;
         const int b_row_end = b_row_begin + 6;
 
-        const int c_row_begin = term_no * 3; 
+        const int c_row_begin = term_no * 3;
         const int c_row_end = c_row_begin + 3;
-        
+
         double termA_val = termA(x1, x2, ix);
 
         for (row = b_row_begin; row < b_row_end; row++){
@@ -692,7 +692,7 @@ public:
             unsigned int term_no;
             for (term_no = 0; term_no < this->ix_list_.row_no; term_no++){
                 // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
-                // organised as 24 rows by 4 cols 
+                // organised as 24 rows by 4 cols
                 this->set_combine_B_ixes(this->ix_list_.val[term_no], term_no);
                 this->set_combine_C_ixes(this->ix_list_.val[term_no], term_no);
             }
@@ -702,7 +702,7 @@ public:
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val, 
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val,
                                                this->terms_signs_);
     };
 
@@ -728,7 +728,7 @@ private:
     }
 
     void set_terms_signs(vector<double>& signs){
-        // reserve memory for vectors 
+        // reserve memory for vectors
         signs.reserve(4);
         const double arr[4] = {1., 1., 1., 1.};
         for (unsigned int c = 0; c < 4; c++){ signs[c] = arr[c]; }
@@ -749,7 +749,7 @@ public:
             unsigned int term_no;
             for (term_no = 0; term_no < this->ix_list_.row_no; term_no++){
                 // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
-                // organised as 24 rows by 4 cols 
+                // organised as 24 rows by 4 cols
                 this->set_combine_B_ixes(this->ix_list_.val[term_no], term_no);
                 this->set_combine_C_ixes(this->ix_list_.val[term_no], term_no);
             }
@@ -758,7 +758,7 @@ public:
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val, 
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val,
                                                this->terms_signs_);
     };
 
@@ -804,7 +804,7 @@ public:
             unsigned int term_no;
             for (term_no = 0; term_no < this->ix_list_.row_no; term_no++){
                 // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
-                // organised as 24 rows by 4 cols 
+                // organised as 24 rows by 4 cols
                 this->set_combine_B_ixes(this->ix_list_.val[term_no], term_no);
                 this->set_combine_C_ixes(this->ix_list_.val[term_no], term_no);
             }
@@ -813,7 +813,7 @@ public:
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val, 
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val,
                                                this->terms_signs_);
     };
 
@@ -861,7 +861,7 @@ public:
            unsigned int term_no;
            for (term_no = 0; term_no < this->ix_list_.row_no; term_no++){
                // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
-               // organised as 24 rows by 4 cols 
+               // organised as 24 rows by 4 cols
                this->set_combine_B_ixes(this->ix_list_.val[term_no], term_no);
                this->set_combine_C_ixes(this->ix_list_.val[term_no], term_no);
            }
@@ -870,7 +870,7 @@ public:
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val, 
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val,
                                                this->terms_signs_);
     };
 
@@ -917,7 +917,7 @@ public:
             unsigned int term_no;
             for (term_no = 0; term_no < this->ix_list_.row_no; term_no++){
                 // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
-                // organised as 24 rows by 4 cols 
+                // organised as 24 rows by 4 cols
                 this->set_combine_B_ixes(this->ix_list_.val[term_no], term_no);
                 this->set_combine_C_ixes(this->ix_list_.val[term_no], term_no);
             }
@@ -927,7 +927,7 @@ public:
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val, 
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val,
                                                terms_signs_);
     };
 
@@ -974,7 +974,7 @@ public:
            unsigned int term_no;
            for (term_no = 0; term_no < this->ix_list_.row_no; term_no++){
                // comb_B_ixes_ and comb_C_ixes_ are (4 terms x 6 perm.) x 4 col in size
-               // organised as 24 rows by 4 cols 
+               // organised as 24 rows by 4 cols
                this->set_combine_B_ixes(this->ix_list_.val[term_no], term_no);
                this->set_combine_C_ixes(this->ix_list_.val[term_no], term_no);
            }
@@ -984,7 +984,7 @@ public:
     using Kernel::value;
     virtual double value (const double* x1, const double* x2) {
         return exp(-0.5 * this->get_squared_distance(x1, x2))
-            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val, 
+            * this->compute_Sigma4deriv_matrix(x1, x2, this->ix_list_.val,
                                                terms_signs_);
     };
 
@@ -1058,46 +1058,22 @@ public:
     delete g2g2_;
   }
 
-  // Assume the GP is defined on the interval [0, x_max_]
-  //
-  // We parse the input x1,x2 by mapping:
-  //   - [0, x_max_] -> kappa
-  //   - [x_max_, 2*x_max_] -> gamma1
-  //   - [2*x_max_, 3*x_max_] -> gamma2
+  //! Evaluate an element of the composite graviational lensing covariance
+  /*! The covariance has a block structure with blocks corresponding to the
+   *  (cross-)covariances of (kappa, gamma1, gamma2)
+   *  The arguments lens_field1, lens_field2 select which block to fill for
+   *  each dimension of the covariance.
+   *
+   *  The output covariance has a multiplicative variance of 1.
+   *
+   *  @param x1           length-2 array with (x,y) coordinates
+   *  @param x2           length-2 array with (x,y) coordinates
+   *  @param lens_field1  enum selecting one of (kappa, gamma1, gamma2)
+   *  @param lens_field2  enum selecting one of (kappa, gamma1, gamma2)
+   */
   using Kernel::value;
-  virtual double value (const double* x1, const double* x2) {
-    // Figure out which kernel to use based on values of x1, x2
-    // TODO: We're assuming that x1[0] and x[1] lie on the same interval.
-    //  => Need to check for this.
-    double x1std[this->ndim_], x2std[this->ndim_];
-    lens_field_t lens_field1, lens_field2;
-    for (size_t i=0; i<this->ndim_; i++) {
-      if (x1[i] < x_max_) {
-        lens_field1 = kappa;
-        x1std[i] = x1[i];
-      } else if (x1[i] < 2*x_max_) {
-        lens_field1 = gamma1;
-        x1std[i] = x1[i] - x_max_;
-      } else if (x1[i] < 3*x_max_) {
-        lens_field1 = gamma2;
-        x1std[i] = x1[i] - 2*x_max_;
-      } else {
-        throw std::out_of_range("GravLensingExpSquaredKernel::value -- Invalid x range");
-      }
-      if (x2[i] < x_max_) {
-        lens_field2 = kappa;
-        x2std[i] = x2[i];
-      } else if (x2[i] < 2*x_max_) {
-        lens_field2 = gamma1;
-        x2std[i] = x2[i] - x_max_;
-      } else if (x2[i] < 3*x_max_) {
-        lens_field2 = gamma2;
-        x2std[i] = x2[i] - 2*x_max_;
-      } else {
-        throw std::out_of_range("GravLensingExpSquaredKernel::value -- Invalid x range");
-      }
-    }
-
+  virtual double value (const double* x1, const double* x2,
+    lens_field_t lens_field1, lens_field_t lens_field2) {
     // Evaluate the value method of the appropriate kernel
     double result;
     switch(lens_field1)
@@ -1106,13 +1082,13 @@ public:
         switch(lens_field2)
         {
           case kappa :
-            result = kk_->value(x1std, x2std);
+            result = kk_->value(x1, x2);
             break;
           case gamma1 :
-            result = kg1_->value(x1std, x2std);
+            result = kg1_->value(x1, x2);
             break;
           case gamma2 :
-            result = kg2_->value(x1std, x2std);
+            result = kg2_->value(x1, x2);
             break;
         }
         break;
@@ -1120,13 +1096,13 @@ public:
         switch(lens_field2)
         {
           case kappa :
-            result = kg1_->value(x2std, x1std);
+            result = kg1_->value(x2, x1);
             break;
           case gamma1 :
-            result = g1g1_->value(x1std, x2std);
+            result = g1g1_->value(x1, x2);
             break;
           case gamma2 :
-            result = g1g2_->value(x1std, x2std);
+            result = g1g2_->value(x1, x2);
             break;
         }
         break;
@@ -1134,13 +1110,13 @@ public:
         switch(lens_field2)
         {
           case kappa :
-            result = kg2_->value(x2std, x1std);
+            result = kg2_->value(x2, x1);
             break;
           case gamma1 :
-            result = g1g2_->value(x2std, x1std);
+            result = g1g2_->value(x2, x1);
             break;
           case gamma2 :
-            result = g2g2_->value(x1std, x2std);
+            result = g2g2_->value(x1, x2);
             break;
         }
         break;
